@@ -1,0 +1,64 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: #F5F5F5;
+  --foreground: #1a1a1a;
+
+  /* Fonts now managed by Next.js layout variables */
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    /* Using soft white as per user request for background, ignoring dark mode to keep consistent streetwear look 
+       or we can map dark mode to same soft white to satisfy the rule "The background should NOT be pure white. Use something comfortable like #F5F5F5"
+    */
+    --background: #F5F5F5;
+    --foreground: #1a1a1a;
+  }
+}
+
+body {
+  color: var(--foreground);
+  background: var(--background);
+  font-family: var(--font-sans);
+  overflow-x: hidden;
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+}
+
+/* Custom CSS animations */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.no-scrollbar {
+  -ms-overflow-style: none;
+  /* IE and Edge */
+  scrollbar-width: none;
+  /* Firefox */
+}
+
+/* Infinity scroll animation */
+@keyframes scroll {
+  0% {
+    transform: translateX(0);
+  }
+
+  100% {
+    transform: translateX(calc(-250px * 9));
+  }
+}
+
+.animate-scroll {
+  animation: scroll 40s linear infinite;
+}
+
+.animate-scroll:hover {
+  animation-play-state: paused;
+}
