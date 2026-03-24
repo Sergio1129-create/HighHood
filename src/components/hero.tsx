@@ -4,22 +4,32 @@ import { motion, useScroll, useTransform } from "framer-motion";
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
-import { useRef } from "react";
+import { useRef, useState, useEffect } from "react";
 
 export default function HeroSection() {
     const ref = useRef(null);
+    const [isMobile, setIsMobile] = useState(false);
+
+    useEffect(() => {
+        const checkMobile = () => setIsMobile(window.innerWidth < 768);
+        checkMobile();
+        window.addEventListener('resize', checkMobile);
+        return () => window.removeEventListener('resize', checkMobile);
+    }, []);
+
     const { scrollYProgress } = useScroll({
         target: ref,
         offset: ["start start", "end start"],
     });
 
-    const y = useTransform(scrollYProgress, [0, 1], ["0%", "50%"]);
-    const opacity = useTransform(scrollYProgress, [0, 0.8], [1, 0]);
+    // Disable parallax and fade on mobile to keep the background fixed
+    const parallaxY = useTransform(scrollYProgress, [0, 1], ["0%", isMobile ? "0%" : "50%"]);
+    const parallaxOpacity = useTransform(scrollYProgress, [0, 0.8], [1, isMobile ? 1 : 0]);
 
     return (
-        <section ref={ref} id="hero" className="relative h-screen w-full overflow-hidden flex items-center justify-center bg-black">
-            {/* Background Image with Parallax */}
-            <motion.div style={{ y, opacity }} className="absolute inset-0 z-0">
+        <section ref={ref} id="hero" className="relative h-[100dvh] w-full overflow-hidden flex items-center justify-center bg-black">
+            {/* Background Image with Parallax (Parallax disabled on mobile) */}
+            <motion.div style={{ y: parallaxY, opacity: parallaxOpacity }} className={`absolute inset-0 z-0 ${isMobile ? 'fixed' : ''}`}>
                 <Image
                     src="/images/fondo-hero.png"
                     alt="Urban Street Graffiti Background"
@@ -30,21 +40,35 @@ export default function HeroSection() {
                 <div className="absolute inset-0 bg-black/40" />
             </motion.div>
 
-            <div className="relative z-10 flex flex-col items-center justify-center max-w-5xl mx-auto px-4 text-center mt-16">
+            <div className="relative z-10 flex flex-col items-center justify-center max-w-5xl mx-auto px-4 text-center mt-12 md:mt-16">
                 <motion.div
                     initial={{ opacity: 0, scale: 0.8 }}
                     animate={{ opacity: 1, scale: 1 }}
                     transition={{ duration: 1, ease: "easeOut" }}
                     className="mb-8 relative flex items-center justify-center"
                 >
-                    <Image
-                        src="/images/logo.png"
-                        alt="HIGHHOOD logo"
-                        width={250}
-                        height={200}
-                        className="object-contain"
-                        priority
-                    />
+                    <style jsx>{`
+                        @keyframes rotate-logo {
+                            0% { transform: rotate(0deg); }
+                            15% { transform: rotate(360deg); }
+                            100% { transform: rotate(360deg); }
+                        }
+                    `}</style>
+                    <div
+                        className="relative w-[150px] h-[120px] md:w-[250px] md:h-[200px]"
+                        style={{
+                            animation: "rotate-logo 5s cubic-bezier(0.22, 1, 0.36, 1) infinite",
+                            willChange: "transform",
+                        }}
+                    >
+                        <Image
+                            src="/images/logo.png"
+                            alt="HIGHHOOD logo"
+                            fill
+                            className="object-contain"
+                            priority
+                        />
+                    </div>
                 </motion.div>
 
                 <motion.div
@@ -52,23 +76,29 @@ export default function HeroSection() {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.8, delay: 0.3 }}
                 >
-                    <h1 className="font-heading text-5xl md:text-7xl lg:text-8xl text-white mb-6 tracking-wide drop-shadow-xl">
+                    <h1 className="font-heading text-4xl sm:text-5xl md:text-7xl lg:text-8xl text-white mb-4 md:mb-6 tracking-wide drop-shadow-xl leading-tight">
                         FROM THE <span className="text-brand-red">HOOD</span><br />
                         TO THE <span className="text-white">WORLD</span>
                     </h1>
 
-                    <p className="text-white/80 text-lg md:text-xl font-medium tracking-widest uppercase mb-12 max-w-2xl mx-auto">
+                    <p className="text-white/80 text-sm sm:text-lg md:text-xl font-medium tracking-widest uppercase mb-10 md:mb-12 max-w-2xl mx-auto px-4">
                         Premium streetwear culture. Oversized aesthetics.
                     </p>
 
-                    <Link href="#shop">
+                    <Link href="#shop" onClick={(e) => {
+                        e.preventDefault();
+                        const element = document.getElementById('shop');
+                        if (element) {
+                            element.scrollIntoView({ behavior: 'smooth' });
+                        }
+                    }}>
                         <motion.button
                             whileHover={{ scale: 1.05 }}
                             whileTap={{ scale: 0.95 }}
-                            className="bg-brand-red text-white px-8 py-4 text-sm md:text-base font-bold tracking-[0.2em] uppercase flex items-center gap-3 mx-auto hover:bg-white hover:text-brand-black transition-colors duration-300 shadow-[0_0_20px_rgba(204,0,0,0.4)]"
+                            className="bg-brand-red text-white px-6 py-3 sm:px-8 sm:py-4 text-xs sm:text-sm md:text-base font-bold tracking-[0.2em] uppercase flex items-center gap-2 sm:gap-3 mx-auto hover:bg-white hover:text-brand-black transition-colors duration-300 shadow-[0_0_20px_rgba(204,0,0,0.4)]"
                         >
                             Shop The Drop
-                            <ArrowRight size={20} />
+                            <ArrowRight size={20} className="w-4 h-4 sm:w-5 sm:h-5" />
                         </motion.button>
                     </Link>
                 </motion.div>

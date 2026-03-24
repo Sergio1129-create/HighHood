@@ -24,6 +24,11 @@ body {
   background: var(--background);
   font-family: var(--font-sans);
   overflow-x: hidden;
+  min-height: 100dvh;
+}
+
+html {
+  scroll-behavior: smooth;
 }
 
 @layer utilities {

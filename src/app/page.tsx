@@ -5,10 +5,11 @@ import SocialReels from "@/components/reels";
 import TrustFeatures from "@/components/features";
 import Footer from "@/components/footer";
 import WhatsappButton from "@/components/whatsapp-button";
+import CartDrawer from "@/components/cart-drawer";
 
 export default function Home() {
     return (
-        <main className="min-h-screen relative selection:bg-brand-red selection:text-white pb-24 lg:pb-0">
+        <main className="min-h-[100dvh] relative selection:bg-brand-red selection:text-white pb-16 lg:pb-0 flex flex-col">
             <Navbar />
             <HeroSection />
             <ShopSection />
@@ -16,6 +17,7 @@ export default function Home() {
             <TrustFeatures />
             <Footer />
             <WhatsappButton />
+            <CartDrawer />
         </main>
     );
 }

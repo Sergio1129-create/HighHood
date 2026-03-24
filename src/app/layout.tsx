@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter, Oswald } from "next/font/google";
 import "./globals.css";
+import { CartProvider } from "@/context/CartContext";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
 const oswald = Oswald({ subsets: ["latin"], weight: ["400", "500", "600", "700"], variable: "--font-heading" });
@@ -18,7 +19,9 @@ export default function RootLayout({
     return (
         <html lang="en">
             <body className={`${inter.variable} ${oswald.variable} font-sans antialiased text-brand-black bg-brand-bg`}>
-                {children}
+                <CartProvider>
+                    {children}
+                </CartProvider>
             </body>
         </html>
     );

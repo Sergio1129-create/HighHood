@@ -11,13 +11,25 @@ export const brands = [
     "Cactus Jack",
 ];
 
-export const products = [
+export interface Product {
+    id: number | string;
+    name: string;
+    brand: string;
+    price: number;
+    image: string;
+    trending?: boolean;
+    onSale?: boolean;
+    salePrice?: number;
+}
+
+export const products: Product[] = [
     {
         id: 2,
         name: "NIKE DN8 Talla 6",
         brand: "Nike",
         price: 160,
         image: "/images/nike-dn8.png",
+        trending: true,
     },
     {
         id: 10,
@@ -25,6 +37,9 @@ export const products = [
         brand: "Adidas",
         price: 140,
         image: "/images/adidas-1.png",
+        trending: true,
+        onSale: true,
+        salePrice: 110,
     },
     {
         id: 11,
@@ -32,6 +47,7 @@ export const products = [
         brand: "Supreme",
         price: 250,
         image: "/images/supreme-1.png",
+        trending: true,
     },
     {
         id: 12,
@@ -46,6 +62,8 @@ export const products = [
         brand: "Palace",
         price: 85,
         image: "/images/palace-1.png",
+        onSale: true,
+        salePrice: 65,
     },
     {
         id: 14,
@@ -60,6 +78,7 @@ export const products = [
         brand: "Palace",
         price: 90,
         image: "/images/palace-3.png",
+        trending: true,
     },
     {
         id: 16,
@@ -67,6 +86,9 @@ export const products = [
         brand: "Cactus Jack",
         price: 120,
         image: "/images/cactus-1.png",
+        trending: true,
+        onSale: true,
+        salePrice: 95,
     },
 ];
 

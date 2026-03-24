@@ -1,18 +1,40 @@
+"use client";
+
 import Image from "next/image";
 import Link from "next/link";
 import { Instagram, Facebook, Share2 } from "lucide-react"; // TikTok and Shopify icons aren't standard in lucide with exact logos, using text/placeholders
+import { motion } from "framer-motion";
 
 export default function Footer() {
     return (
-        <footer className="bg-brand-black text-white pt-20 pb-10 relative overflow-hidden">
+        <footer className="bg-brand-black text-white pt-20 pb-safe sm:pb-10 relative overflow-hidden min-h-fit">
             {/* Top fade from Features section */}
             <div className="absolute top-0 inset-x-0 h-4 bg-gradient-to-b from-brand-black to-transparent z-10 pointer-events-none" />
-            <div className="container mx-auto px-4 md:px-8">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-16">
+            
+            {/* Extended background color to fill iOS safe area and avoid white bars */}
+            <div className="absolute inset-0 bg-brand-black -z-10 h-[150%]" />
+
+            <div className="container mx-auto px-4 md:px-8 pb-10 sm:pb-0">
+                <motion.div 
+                    initial="hidden"
+                    whileInView="show"
+                    viewport={{ once: true, margin: "-50px" }}
+                    variants={{
+                        hidden: {},
+                        show: { transition: { staggerChildren: 0.15 } }
+                    }}
+                    className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10 md:gap-12 mb-16"
+                >
 
                     {/* Brand Col */}
-                    <div className="col-span-1 lg:col-span-2">
-                        <Link href="/" className="inline-block mb-6 relative w-24 h-24">
+                    <motion.div 
+                        variants={{
+                            hidden: { opacity: 0, y: 40, filter: "blur(8px)" },
+                            show: { opacity: 1, y: 0, filter: "blur(0px)", transition: { duration: 0.6, ease: "easeOut" } }
+                        }}
+                        className="col-span-1 lg:col-span-2"
+                    >
+                        <Link href="/" className="inline-block mb-6 relative w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24">
                             <Image
                                 src="/images/logo.png"
                                 alt="HIGHHOOD Logo"
@@ -20,7 +42,7 @@ export default function Footer() {
                                 className="object-contain drop-shadow-[0_0_10px_rgba(255,255,255,0.2)]"
                             />
                         </Link>
-                        <p className="text-white/60 text-sm max-w-sm font-medium tracking-widest leading-relaxed mb-8 uppercase">
+                        <p className="text-white/60 text-xs sm:text-sm max-w-xs sm:max-w-sm font-medium tracking-widest leading-relaxed mb-8 uppercase">
                             Premium streetwear from the hood to the world. Oversized cuts, raw aesthetics, and high quality garments.
                         </p>
 
@@ -55,10 +77,15 @@ export default function Footer() {
                                 <Share2 size={18} />
                             </a>
                         </div>
-                    </div>
+                    </motion.div>
 
                     {/* Quick Links */}
-                    <div>
+                    <motion.div
+                        variants={{
+                            hidden: { opacity: 0, y: 40, filter: "blur(8px)" },
+                            show: { opacity: 1, y: 0, filter: "blur(0px)", transition: { duration: 0.6, ease: "easeOut" } }
+                        }}
+                    >
                         <h4 className="font-heading text-xl text-brand-red mb-6 tracking-wider">Explore</h4>
                         <ul className="space-y-4">
                             {['New Arrivals', 'Best Sellers', 'Brands', 'Lookbook', 'Community'].map((link) => (
@@ -69,10 +96,15 @@ export default function Footer() {
                                 </li>
                             ))}
                         </ul>
-                    </div>
+                    </motion.div>
 
                     {/* Contact */}
-                    <div>
+                    <motion.div
+                        variants={{
+                            hidden: { opacity: 0, y: 40, filter: "blur(8px)" },
+                            show: { opacity: 1, y: 0, filter: "blur(0px)", transition: { duration: 0.6, ease: "easeOut" } }
+                        }}
+                    >
                         <h4 className="font-heading text-xl text-brand-red mb-6 tracking-wider">Contact</h4>
                         <ul className="space-y-4 text-white/70 text-sm uppercase tracking-widest">
                             <li>
@@ -92,18 +124,24 @@ export default function Footer() {
                                 <span>Bogotá, Colombia</span>
                             </li>
                         </ul>
-                    </div>
+                    </motion.div>
 
-                </div>
+                </motion.div>
 
                 {/* Bottom */}
-                <div className="pt-8 border-t border-white/10 flex flex-col md:flex-row items-center justify-between gap-4 text-white/40 text-xs uppercase tracking-widest">
+                <motion.div 
+                    initial={{ opacity: 0, filter: "blur(8px)" }}
+                    whileInView={{ opacity: 1, filter: "blur(0px)" }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 0.8, delay: 0.4 }}
+                    className="pt-8 border-t border-white/10 flex flex-col md:flex-row items-center justify-between gap-4 md:gap-4 text-center md:text-left text-white/40 text-[10px] sm:text-xs uppercase tracking-widest"
+                >
                     <p>&copy; {new Date().getFullYear()} HIGHHOOD. All rights reserved.</p>
                     <div className="flex gap-4">
                         <Link href="#" className="hover:text-white transition-colors">Privacy Policy</Link>
                         <Link href="#" className="hover:text-white transition-colors">Terms of Service</Link>
                     </div>
-                </div>
+                </motion.div>
             </div>
         </footer>
     );
