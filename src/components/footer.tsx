@@ -7,7 +7,7 @@ import { motion } from "framer-motion";
 
 export default function Footer() {
     return (
-        <footer 
+        <footer
             className="bg-brand-black text-white pt-20 pb-10 relative overflow-hidden min-h-fit"
             style={{ boxShadow: "0 50vh 0 50vh #1A1A1A" }}
         >
@@ -15,19 +15,19 @@ export default function Footer() {
             <div className="absolute top-0 inset-x-0 h-4 bg-gradient-to-b from-brand-black to-transparent z-10 pointer-events-none" />
 
             <div className="container mx-auto px-4 md:px-8 pb-10 sm:pb-0">
-                <motion.div 
+                <motion.div
                     initial="hidden"
                     whileInView="show"
                     viewport={{ once: true, margin: "-50px" }}
                     variants={{
                         hidden: {},
-                        show: { transition: { staggerChildren: 0.15 } }
+                        show: { transition: { staggerChildren: 0.05 } }
                     }}
                     className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10 md:gap-12 mb-16"
                 >
 
                     {/* Brand Col */}
-                    <motion.div 
+                    <motion.div
                         variants={{
                             hidden: { opacity: 0, y: 40, filter: "blur(8px)" },
                             show: { opacity: 1, y: 0, filter: "blur(0px)", transition: { duration: 0.6, ease: "easeOut" } }
@@ -101,8 +101,8 @@ export default function Footer() {
                     {/* Contact */}
                     <motion.div
                         variants={{
-                            hidden: { opacity: 0, y: 40, filter: "blur(8px)" },
-                            show: { opacity: 1, y: 0, filter: "blur(0px)", transition: { duration: 0.6, ease: "easeOut" } }
+                            hidden: { opacity: 0, y: 40 },
+                            show: { opacity: 1, y: 0, transition: { duration: 0.3, ease: "easeOut" } }
                         }}
                     >
                         <h4 className="font-heading text-xl text-brand-red mb-6 tracking-wider">Contact</h4>
@@ -129,11 +129,11 @@ export default function Footer() {
                 </motion.div>
 
                 {/* Bottom */}
-                <motion.div 
-                    initial={{ opacity: 0, filter: "blur(8px)" }}
-                    whileInView={{ opacity: 1, filter: "blur(0px)" }}
+                <motion.div
+                    initial={{ opacity: 0 }}
+                    whileInView={{ opacity: 1 }}
                     viewport={{ once: true }}
-                    transition={{ duration: 0.8, delay: 0.4 }}
+                    transition={{ duration: 0.4, delay: 0.1 }}
                     className="pt-8 border-t border-white/10 flex flex-col md:flex-row items-center justify-between gap-4 md:gap-4 text-center md:text-left text-white/40 text-[10px] sm:text-xs uppercase tracking-widest"
                 >
                     <p>&copy; {new Date().getFullYear()} HIGHHOOD. All rights reserved.</p>

@@ -44,7 +44,7 @@ export default function HeroSection() {
                 <motion.div
                     initial={{ opacity: 0, scale: 0.8 }}
                     animate={{ opacity: 1, scale: 1 }}
-                    transition={{ duration: 1, ease: "easeOut" }}
+                    transition={{ duration: 0.4, ease: "easeOut" }}
                     className="mb-8 relative flex items-center justify-center"
                 >
                     <style jsx>{`
@@ -74,7 +74,7 @@ export default function HeroSection() {
                 <motion.div
                     initial={{ opacity: 0, y: 30 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.8, delay: 0.3 }}
+                    transition={{ duration: 0.4, delay: 0.1 }}
                 >
                     <h1 className="font-heading text-4xl sm:text-5xl md:text-7xl lg:text-8xl text-white mb-4 md:mb-6 tracking-wide drop-shadow-xl leading-tight">
                         FROM THE <span className="text-brand-red">HOOD</span><br />

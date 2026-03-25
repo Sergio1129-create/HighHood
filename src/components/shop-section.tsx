@@ -50,11 +50,11 @@ const ProductCarousel = ({ title, data, badgeStr, isOffer }: { title: string, da
     if (data.length === 0) return null;
 
     return (
-        <motion.div 
-            initial={{ opacity: 0, y: 40, filter: "blur(10px)" }}
-            whileInView={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+        <motion.div
+            initial={{ opacity: 0, y: 40 }}
+            whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: "-100px" }}
-            transition={{ duration: 0.8, ease: "easeOut" }}
+            transition={{ duration: 0.4, ease: "easeOut" }}
             className="mb-6 sm:mb-8 md:mb-10 last:mb-0"
         >
             <div className="flex items-center justify-between mb-4 sm:mb-6 md:mb-8 px-4 md:px-8 max-w-[1600px] mx-auto relative z-20">
@@ -194,7 +194,7 @@ export default function ShopSection() {
     useEffect(() => {
         if (videoRef.current) {
             if (isMobile) {
-                videoRef.current.play().catch(() => {});
+                videoRef.current.play().catch(() => { });
                 videoRef.current.loop = true;
             } else {
                 videoRef.current.pause();
@@ -263,44 +263,51 @@ export default function ShopSection() {
             {/* 1. Structural Layering (Upper "Curated Brands" area) */}
             <section
                 ref={sectionRef}
-                className="relative w-full min-h-[40vh] md:min-h-[70vh] overflow-hidden flex flex-col justify-center py-16"
+                className="relative z-30 w-full min-h-[40vh] md:min-h-[70vh] flex flex-col justify-center py-16"
             >
-
                 {/* Layer 1: Conditional GPU Video or Static Mobile Hero Background */}
                 {isMobile ? (
                     <>
-                        {/* 3D Background Layer: Sofa */}
-                        <Image
-                            src="/images/fondo-movil-3D-sofa.png"
-                            alt="Sofa Background"
-                            fill
-                            className="absolute inset-0 object-cover object-center z-0 pointer-events-none opacity-40 blur-sm scale-110"
-                            priority
-                        />
-                        {/* 3D Foreground Layer: Persona */}
-                        <Image
-                            src="/images/fondo-movil-3D-persona.png"
-                            alt="Persona Foreground"
-                            fill
-                            className="absolute inset-0 object-cover object-center z-0 pointer-events-none opacity-85"
-                            priority
-                        />
+                        {/* Wrapper to clip only the background sofa without clipping the bleeding Persona */}
+                        <div className="absolute inset-0 overflow-hidden z-0 pointer-events-none select-none w-full h-full">
+                            <Image
+                                src="/images/fondo-movil-3D-sofa.png"
+                                alt="Sofa Background"
+                                fill
+                                className="object-cover object-center opacity-60 blur-sm scale-110"
+                                priority
+                                draggable={false}
+                            />
+                        </div>
+                        {/* 3D Foreground Layer: Persona (z-0 stays behind the z-10 carousel UI text but still overlaps the bottom section because parent is z-30) */}
+                        <div className="absolute inset-x-0 bottom-0 h-full z-0 pointer-events-none select-none">
+                            <Image
+                                src="/images/fondo-movil-3D-persona.png"
+                                alt="Persona Foreground"
+                                fill
+                                className="object-contain object-bottom scale-[1.6] -translate-y-5"
+                                priority
+                                draggable={false}
+                            />
+                        </div>
                     </>
                 ) : (
-                    <video
-                        ref={videoRef}
-                        src="/images/shop-section-video.mp4"
-                        muted
-                        playsInline
-                        autoPlay={false}
-                        preload="metadata"
-                        style={{ WebkitPlaysInline: true } as any}
-                        className="absolute inset-0 w-full h-full object-cover object-center z-0 pointer-events-none opacity-50"
-                    />
+                    <div className="absolute inset-0 overflow-hidden z-0 pointer-events-none w-full h-full">
+                        <video
+                            ref={videoRef}
+                            src="/images/shop-section-video.mp4"
+                            muted
+                            playsInline
+                            autoPlay={false}
+                            preload="metadata"
+                            style={{ WebkitPlaysInline: true } as any}
+                            className="absolute inset-0 w-full h-full object-cover object-center opacity-80"
+                        />
+                    </div>
                 )}
 
                 {/* Layer 2 (The Transfer Overlay): optimized to flat transparency instead of expensive backdrop blur */}
-                <div className="absolute inset-0 bg-black/60 z-0 pointer-events-none" />
+                <div className="absolute inset-0 bg-black/40 z-0 pointer-events-none" />
 
                 {/* Layer 3 (The UI): The "CURATED BRANDS" header and the infinite brands carousel */}
                 <div className="relative z-10 w-full">
@@ -357,7 +364,7 @@ export default function ShopSection() {
             {/* 4. Products Grid Area (Trending Now) logic untouched background does not conflict */}
             <section id="trending-now" className="relative w-full bg-[#1A1A1A] py-16 md:py-24 z-20 min-h-screen border-t border-white/10">
                 <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent" />
-                
+
                 {/* Fallback pattern logic untouched if desired, keeping clean #1A1A1A */}
                 <Image
                     src="/images/brands-bg.png"

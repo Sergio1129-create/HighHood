@@ -30,13 +30,13 @@ export default function TrustFeatures() {
     return (
         <section className="bg-neutral-100 py-16 relative overflow-hidden">
             <div className="container mx-auto px-4 md:px-8 relative z-20">
-                <motion.div 
+                <motion.div
                     initial="hidden"
                     whileInView="show"
                     viewport={{ once: true, margin: "-50px" }}
                     variants={{
                         hidden: {},
-                        show: { transition: { staggerChildren: 0.15 } }
+                        show: { transition: { staggerChildren: 0.05 } }
                     }}
                     className="grid grid-cols-2 lg:grid-cols-4 gap-8 md:gap-12 text-center md:text-left"
                 >
@@ -44,8 +44,8 @@ export default function TrustFeatures() {
                         <motion.div
                             key={idx}
                             variants={{
-                                hidden: { opacity: 0, y: 40, filter: "blur(8px)" },
-                                show: { opacity: 1, y: 0, filter: "blur(0px)", transition: { duration: 0.6, ease: "easeOut" } }
+                                hidden: { opacity: 0, y: 40 },
+                                show: { opacity: 1, y: 0, transition: { duration: 0.3, ease: "easeOut" } }
                             }}
                             className="flex flex-col md:flex-row items-center md:items-start gap-4 md:gap-6 group"
                         >
