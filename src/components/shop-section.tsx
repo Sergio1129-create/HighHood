@@ -188,6 +188,19 @@ export default function ShopSection() {
     const videoRef = useRef<HTMLVideoElement>(null);
     const baseX = useRef(0);
 
+    // Play normally on mobile to avoid scrub decoding lag
+    useEffect(() => {
+        if (videoRef.current) {
+            if (isMobile) {
+                videoRef.current.play().catch(() => {});
+                videoRef.current.loop = true;
+            } else {
+                videoRef.current.pause();
+                videoRef.current.loop = false;
+            }
+        }
+    }, [isMobile]);
+
     const { scrollYProgress, scrollY } = useScroll({
         target: sectionRef,
         offset: ["start end", "end start"]
@@ -195,6 +208,7 @@ export default function ShopSection() {
 
     // Immediate sync: removes the delay/lag from the spring solver
     useMotionValueEvent(scrollYProgress, "change", (latest) => {
+        if (isMobile) return; // Disable expensive video hardware scrubbing on phones
         if (videoRef.current && videoRef.current.readyState >= 2 && !isNaN(videoRef.current.duration)) {
             // Direct 1:1 hardware mapping to scrollbar (covering 40% of video)
             const nextTime = (latest * 0.4) * videoRef.current.duration;
