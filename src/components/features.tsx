@@ -28,7 +28,7 @@ export default function TrustFeatures() {
     ];
 
     return (
-        <section className="bg-brand-bg py-16 relative overflow-hidden">
+        <section className="bg-neutral-100 py-16 relative overflow-hidden">
             <div className="container mx-auto px-4 md:px-8 relative z-20">
                 <motion.div 
                     initial="hidden"

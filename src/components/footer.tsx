@@ -7,12 +7,12 @@ import { motion } from "framer-motion";
 
 export default function Footer() {
     return (
-        <footer className="bg-brand-black text-white pt-20 pb-safe sm:pb-10 relative overflow-hidden min-h-fit">
+        <footer 
+            className="bg-brand-black text-white pt-20 pb-10 relative overflow-hidden min-h-fit"
+            style={{ boxShadow: "0 50vh 0 50vh #1A1A1A" }}
+        >
             {/* Top fade from Features section */}
             <div className="absolute top-0 inset-x-0 h-4 bg-gradient-to-b from-brand-black to-transparent z-10 pointer-events-none" />
-            
-            {/* Extended background color to fill iOS safe area and avoid white bars */}
-            <div className="absolute inset-0 bg-brand-black -z-10 h-[150%]" />
 
             <div className="container mx-auto px-4 md:px-8 pb-10 sm:pb-0">
                 <motion.div 

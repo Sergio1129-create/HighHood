@@ -100,7 +100,9 @@ const ProductCarousel = ({ title, data, badgeStr, isOffer }: { title: string, da
                                         src={product.image}
                                         alt={product.name}
                                         fill
+                                        sizes="(max-width: 480px) 50vw, (max-width: 768px) 33vw, (max-width: 1024px) 25vw, 20vw"
                                         className="object-cover object-center transition-transform duration-700 group-hover:scale-105"
+                                        loading="lazy"
                                     />
                                     <div className="absolute inset-0 bg-black/5 group-hover:bg-black/10 transition-colors duration-300 pointer-events-none" />
 
@@ -264,20 +266,41 @@ export default function ShopSection() {
                 className="relative w-full min-h-[40vh] md:min-h-[70vh] overflow-hidden flex flex-col justify-center py-16"
             >
 
-                {/* Layer 1 (The Video Engine): optimized for iOS/GPUs without expensive mix-blend */}
-                <video
-                    ref={videoRef}
-                    src="/images/shop-section-video.mp4"
-                    muted
-                    playsInline
-                    autoPlay={false}
-                    preload="metadata"
-                    style={{ WebkitPlaysInline: true } as any}
-                    className="absolute inset-0 w-full h-full object-cover object-center z-0 pointer-events-none opacity-50"
-                />
+                {/* Layer 1: Conditional GPU Video or Static Mobile Hero Background */}
+                {isMobile ? (
+                    <>
+                        {/* 3D Background Layer: Sofa */}
+                        <Image
+                            src="/images/fondo-movil-3D-sofa.png"
+                            alt="Sofa Background"
+                            fill
+                            className="absolute inset-0 object-cover object-center z-0 pointer-events-none opacity-40 blur-sm scale-110"
+                            priority
+                        />
+                        {/* 3D Foreground Layer: Persona */}
+                        <Image
+                            src="/images/fondo-movil-3D-persona.png"
+                            alt="Persona Foreground"
+                            fill
+                            className="absolute inset-0 object-cover object-center z-0 pointer-events-none opacity-85"
+                            priority
+                        />
+                    </>
+                ) : (
+                    <video
+                        ref={videoRef}
+                        src="/images/shop-section-video.mp4"
+                        muted
+                        playsInline
+                        autoPlay={false}
+                        preload="metadata"
+                        style={{ WebkitPlaysInline: true } as any}
+                        className="absolute inset-0 w-full h-full object-cover object-center z-0 pointer-events-none opacity-50"
+                    />
+                )}
 
                 {/* Layer 2 (The Transfer Overlay): optimized to flat transparency instead of expensive backdrop blur */}
-                <div className="absolute inset-0 bg-black/50 z-0 pointer-events-none" />
+                <div className="absolute inset-0 bg-black/60 z-0 pointer-events-none" />
 
                 {/* Layer 3 (The UI): The "CURATED BRANDS" header and the infinite brands carousel */}
                 <div className="relative z-10 w-full">
