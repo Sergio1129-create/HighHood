@@ -4,9 +4,11 @@ import { useCart } from "@/context/CartContext";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Minus, Plus, Trash2 } from "lucide-react";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 
 export default function CartDrawer() {
     const { items, isCartOpen, toggleCart, removeItem, addItem, deleteItem, totalPrice } = useCart();
+    const router = useRouter();
 
     return (
         <AnimatePresence>
@@ -122,7 +124,7 @@ export default function CartDrawer() {
                                     <span className="text-xl font-bold">${totalPrice.toFixed(2)} COP</span>
                                 </div>
                                 <button
-                                    onClick={() => alert("Proceeding to WhatsApp or Checkout...")}
+                                    onClick={() => { toggleCart(); router.push("/checkout"); }}
                                     className="w-full bg-brand-red text-white py-4 text-sm font-bold tracking-[0.2em] uppercase hover:bg-brand-black transition-colors"
                                 >
                                     CHECKOUT

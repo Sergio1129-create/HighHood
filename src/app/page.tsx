@@ -6,6 +6,7 @@ import TrustFeatures from "@/components/features";
 import Footer from "@/components/footer";
 import WhatsappButton from "@/components/whatsapp-button";
 import CartDrawer from "@/components/cart-drawer";
+import { SubscribeButton } from "@/components/subscribe-modal";
 
 export default function Home() {
     return (
@@ -18,6 +19,7 @@ export default function Home() {
             <Footer />
             <WhatsappButton />
             <CartDrawer />
+            <SubscribeButton />
         </main>
     );
 }

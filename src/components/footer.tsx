@@ -77,6 +77,31 @@ export default function Footer() {
                                 <Share2 size={18} />
                             </a>
                         </div>
+
+                        {/* DREON — Created by */}
+                        <div className="mt-10 pt-8 border-t border-white/10">
+                            <p className="text-[10px] uppercase tracking-[0.25em] text-white/30 mb-3">Created by</p>
+                            <div className="flex items-center gap-3">
+                                <div className="relative w-8 h-8 flex-shrink-0">
+                                    <Image
+                                        src="/images/dreon-logo.png"
+                                        alt="DREON"
+                                        fill
+                                        className="object-contain"
+                                    />
+                                </div>
+                                <span className="font-heading text-sm tracking-[0.2em] text-white/70">DREON</span>
+                                <a
+                                    href="https://www.instagram.com/dreon.club/"
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    className="ml-1 w-7 h-7 border border-white/20 rounded-full flex items-center justify-center hover:bg-white hover:text-brand-black transition-colors text-white/50"
+                                    aria-label="DREON en Instagram"
+                                >
+                                    <Instagram size={14} />
+                                </a>
+                            </div>
+                        </div>
                     </motion.div>
 
                     {/* Quick Links */}
@@ -137,9 +162,21 @@ export default function Footer() {
                     className="pt-8 border-t border-white/10 flex flex-col md:flex-row items-center justify-between gap-4 md:gap-4 text-center md:text-left text-white/40 text-[10px] sm:text-xs uppercase tracking-widest"
                 >
                     <p>&copy; {new Date().getFullYear()} HIGHHOOD. All rights reserved.</p>
-                    <div className="flex gap-4">
+                    <div className="flex items-center gap-4">
                         <Link href="#" className="hover:text-white transition-colors">Privacy Policy</Link>
                         <Link href="#" className="hover:text-white transition-colors">Terms of Service</Link>
+                        <span className="text-white/20">·</span>
+                        <a
+                            href="https://www.instagram.com/dreon.co/"
+                            target="_blank"
+                            rel="noreferrer"
+                            className="flex items-center gap-1.5 hover:text-white/60 transition-colors"
+                        >
+                            <div className="relative w-3.5 h-3.5">
+                                <Image src="/images/dreon-logo.png" alt="DREON" fill className="object-contain opacity-60" />
+                            </div>
+                            Created by DREON
+                        </a>
                     </div>
                 </motion.div>
             </div>

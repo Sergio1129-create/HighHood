@@ -9,46 +9,97 @@ datasource db {
 }
 
 // --------------------------------------
-// 1. Users / Profiles
+// 1. Users / Profiles (Auth & Subscriptions)
 // --------------------------------------
-model Profile {
-  id         String   @id @db.Uuid // Matches auth.users id
-  role       String   @default("customer") // 'customer' | 'admin'
-  created_at DateTime @default(now()) @db.Timestamptz(6)
-  updated_at DateTime @default(now()) @updatedAt @db.Timestamptz(6)
 
-  orders     Order[]
+enum Role {
+  CUSTOMER
+  ADMIN
+}
 
-  @@map("profiles")
+model CustomerProfile {
+  id                String   @id @db.Uuid // Matches auth.users.id
+  email             String   @unique
+  full_name         String?
+  phone             String?
+  doc_type          String?  // CC, CE, NIT, etc.
+  doc_number        String?
+  gender            String?
+  birthday          DateTime? @db.Date
+  role              Role     @default(CUSTOMER)
+  newsletter_opt_in Boolean  @default(false)
+  created_at        DateTime @default(now()) @db.Timestamptz(6)
+  updated_at        DateTime @default(now()) @updatedAt @db.Timestamptz(6)
+
+  addresses         CustomerAddress[]
+  orders            Order[]
+  audit_logs        AuditLog[]
+
+  @@map("customer_profiles")
+}
+
+model CustomerAddress {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  customer_id String   @db.Uuid
+  label       String   @default("Casa")
+  address     String
+  city        String?
+  department  String?
+  postal_code String?
+  is_default  Boolean  @default(false)
+  created_at  DateTime @default(now()) @db.Timestamptz(6)
+  updated_at  DateTime @default(now()) @updatedAt @db.Timestamptz(6)
+
+  customer    CustomerProfile @relation(fields: [customer_id], references: [id], onDelete: Cascade)
+  orders      Order[]         @relation("ShippingAddress")
+
+  @@map("customer_addresses")
 }
 
 // --------------------------------------
 // 2. Products Catalog
 // --------------------------------------
+
+model Brand {
+  id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name        String    @unique
+  slug        String    @unique
+  created_at  DateTime  @default(now()) @db.Timestamptz(6)
+  
+  products    Product[]
+
+  @@map("brands")
+}
+
+model Category {
+  id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name        String    @unique
+  slug        String    @unique
+  created_at  DateTime  @default(now()) @db.Timestamptz(6)
+  
+  products    ProductCategory[]
+
+  @@map("categories")
+}
+
 model Product {
   id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  brand_id    String?  @db.Uuid
   name        String
+  slug        String   @unique
   description String?
   base_price  Decimal  @db.Decimal(10, 2)
+  sale_price  Decimal? @db.Decimal(10, 2)
+  is_active   Boolean  @default(true)
   created_at  DateTime @default(now()) @db.Timestamptz(6)
   updated_at  DateTime @default(now()) @updatedAt @db.Timestamptz(6)
 
+  brand       Brand?            @relation(fields: [brand_id], references: [id], onDelete: SetNull)
   categories  ProductCategory[]
   variants    ProductVariant[]
   images      ProductImage[]
 
   @@map("products")
-}
-
-model Category {
-  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  name       String
-  slug       String   @unique
-  created_at DateTime @default(now()) @db.Timestamptz(6)
-
-  products   ProductCategory[]
-
-  @@map("categories")
 }
 
 model ProductCategory {
@@ -65,23 +116,26 @@ model ProductCategory {
 model ProductVariant {
   id             String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   product_id     String   @db.Uuid
-  size           String?
+  size           String   // M, L, XL, etc.
   color          String?
   stock_quantity Int      @default(0)
+  sku            String?  @unique
   created_at     DateTime @default(now()) @db.Timestamptz(6)
+  updated_at     DateTime @default(now()) @updatedAt @db.Timestamptz(6)
 
   product        Product  @relation(fields: [product_id], references: [id], onDelete: Cascade)
   order_items    OrderItem[]
 
-  @@unique([product_id, size, color])
+  @@unique([product_id, size, color]) // Prevent duplicate variants
   @@map("product_variants")
 }
 
 model ProductImage {
   id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   product_id    String   @db.Uuid
-  image_url     String
+  url           String
   display_order Int      @default(0)
+  is_primary    Boolean  @default(false)
   created_at    DateTime @default(now()) @db.Timestamptz(6)
 
   product       Product  @relation(fields: [product_id], references: [id], onDelete: Cascade)
@@ -92,16 +146,44 @@ model ProductImage {
 // --------------------------------------
 // 3. Sales & Orders
 // --------------------------------------
-model Order {
-  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  user_id      String?  @db.Uuid
-  status       String   @default("pending") // pending | processing | completed | cancelled
-  total_amount Decimal  @default(0.00) @db.Decimal(10, 2)
-  created_at   DateTime @default(now()) @db.Timestamptz(6)
-  updated_at   DateTime @default(now()) @updatedAt @db.Timestamptz(6)
 
-  user         Profile? @relation(fields: [user_id], references: [id], onDelete: SetNull)
-  items        OrderItem[]
+enum OrderStatus {
+  PENDING
+  PROCESSING
+  SHIPPED
+  DELIVERED
+  CANCELLED
+}
+
+enum PaymentMethod {
+  CREDIT_CARD
+  PSE
+  NEQUI
+  MERCADOPAGO
+}
+
+enum PaymentStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  REFUNDED
+}
+
+model Order {
+  id                  String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  customer_id         String   @db.Uuid
+  shipping_address_id String?  @db.Uuid
+  status              OrderStatus @default(PENDING)
+  total_amount        Decimal  @db.Decimal(10, 2)
+  shipping_cost       Decimal  @default(0.00) @db.Decimal(10, 2)
+  payment_method      PaymentMethod
+  payment_status      PaymentStatus @default(PENDING)
+  created_at          DateTime @default(now()) @db.Timestamptz(6)
+  updated_at          DateTime @default(now()) @updatedAt @db.Timestamptz(6)
+
+  customer            CustomerProfile @relation(fields: [customer_id], references: [id], onDelete: Restrict)
+  shipping_address    CustomerAddress? @relation("ShippingAddress", fields: [shipping_address_id], references: [id], onDelete: SetNull)
+  items               OrderItem[]
 
   @@map("orders")
 }
@@ -112,10 +194,37 @@ model OrderItem {
   variant_id        String   @db.Uuid
   quantity          Int
   price_at_purchase Decimal  @db.Decimal(10, 2)
-  created_at        DateTime @default(now()) @db.Timestamptz(6)
 
   order             Order          @relation(fields: [order_id], references: [id], onDelete: Cascade)
   variant           ProductVariant @relation(fields: [variant_id], references: [id], onDelete: Restrict)
 
   @@map("order_items")
+}
+
+// --------------------------------------
+// 4. Admin / UI Settings & Logs
+// --------------------------------------
+
+model SiteImage {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  section     String   @unique // 'hero', 'shop', 'reels', 'admin'
+  url         String
+  updated_by  String?  @db.Uuid
+  updated_at  DateTime @default(now()) @updatedAt @db.Timestamptz(6)
+
+  @@map("site_images")
+}
+
+model AuditLog {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_id     String?  @db.Uuid
+  action      String   // e.g., 'UPDATE_SITE_IMAGE', 'CREATE_PRODUCT'
+  entity      String   // e.g., 'SiteImage', 'Product'
+  entity_id   String?
+  details     Json?    @db.JsonB
+  created_at  DateTime @default(now()) @db.Timestamptz(6)
+
+  user        CustomerProfile? @relation(fields: [user_id], references: [id], onDelete: SetNull)
+
+  @@map("audit_logs")
 }

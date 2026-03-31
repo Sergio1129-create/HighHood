@@ -72,11 +72,11 @@ const ProductCarousel = ({ title, data, badgeStr, isOffer }: { title: string, da
                 </div>
             </div>
 
-            <div className="pl-4 md:pl-8 max-w-[1600px] mx-auto relative z-20">
+            <div className="px-2 sm:px-4 md:pl-8 max-w-[1600px] mx-auto relative z-20">
                 <Swiper
                     modules={[Navigation, FreeMode]}
-                    spaceBetween={16}
-                    slidesPerView={1.5}
+                    spaceBetween={12}
+                    slidesPerView={2.2}
                     freeMode={true}
                     onInit={() => setInit(true)}
                     navigation={{
@@ -84,12 +84,12 @@ const ProductCarousel = ({ title, data, badgeStr, isOffer }: { title: string, da
                         nextEl: nextRef.current,
                     }}
                     breakpoints={{
-                        480: { slidesPerView: 2.2, spaceBetween: 20 },
+                        480: { slidesPerView: 2.5, spaceBetween: 16 },
                         768: { slidesPerView: 3.2, spaceBetween: 24 },
                         1024: { slidesPerView: 4.2, spaceBetween: 30 },
                         1280: { slidesPerView: 5.2, spaceBetween: 30 },
                     }}
-                    className="!pr-4 md:!pr-8"
+                    className="!pr-2 sm:!pr-4 md:!pr-8"
                 >
                     {data.map((product) => (
                         <SwiperSlide key={product.id} className="h-auto px-1 pb-4">
@@ -263,7 +263,7 @@ export default function ShopSection() {
             {/* 1. Structural Layering (Upper "Curated Brands" area) */}
             <section
                 ref={sectionRef}
-                className="relative z-30 w-full min-h-[40vh] md:min-h-[70vh] flex flex-col justify-center py-16"
+                className="relative z-30 w-full min-h-[50vh] md:min-h-[70vh] flex flex-col justify-start md:justify-center pt-5 pb-10 md:py-8"
             >
                 {/* Layer 1: Conditional GPU Video or Static Mobile Hero Background */}
                 {isMobile ? (
@@ -274,18 +274,18 @@ export default function ShopSection() {
                                 src="/images/fondo-movil-3D-sofa.png"
                                 alt="Sofa Background"
                                 fill
-                                className="object-cover object-center opacity-60 blur-sm scale-110"
+                                className="object-[fill] scale-[1.13] opacity-100 blur-[2.55px] -translate-y-4"
                                 priority
                                 draggable={false}
                             />
                         </div>
-                        {/* 3D Foreground Layer: Persona (z-0 stays behind the z-10 carousel UI text but still overlaps the bottom section because parent is z-30) */}
-                        <div className="absolute inset-x-0 bottom-0 h-full z-0 pointer-events-none select-none">
+                        {/* 3D Foreground Layer: Persona */}
+                        <div className="absolute inset-x-0 bottom-0 h-full z-20 pointer-events-none select-none">
                             <Image
                                 src="/images/fondo-movil-3D-persona.png"
                                 alt="Persona Foreground"
                                 fill
-                                className="object-contain object-bottom scale-[1.6] -translate-y-5"
+                                className="object-contain object-bottom scale-[1.6] -translate-y-8 translate-x-1 opacity-100"
                                 priority
                                 draggable={false}
                             />
@@ -307,11 +307,11 @@ export default function ShopSection() {
                 )}
 
                 {/* Layer 2 (The Transfer Overlay): optimized to flat transparency instead of expensive backdrop blur */}
-                <div className="absolute inset-0 bg-black/40 z-0 pointer-events-none" />
+                <div className="absolute inset-0 bg-black/40 z-0 pointer-events-none " />
 
                 {/* Layer 3 (The UI): The "CURATED BRANDS" header and the infinite brands carousel */}
-                <div className="relative z-10 w-full">
-                    <div className="text-center mb-12 sm:mb-16">
+                <div className="relative w-full">
+                    <div className="text-center mb-12 sm:mb-16 translate-y-2.5 sm:translate-y-16 relative z-10">
                         <h2 className="font-heading text-3xl sm:text-4xl md:text-5xl text-white uppercase tracking-widest drop-shadow-lg">
                             Curated Brands
                         </h2>
@@ -334,7 +334,8 @@ export default function ShopSection() {
                         <ChevronRight size={24} />
                     </button>
 
-                    <div className="relative group flex overflow-x-hidden w-full py-8 md:py-12">
+                    {/* The scrolling brand ticker */}
+                    <div className="relative z-30 group flex overflow-x-hidden w-full py-8 md:py-12">
                         <motion.div
                             className="flex w-max items-center will-change-transform"
                             style={{ x, skewX, whiteSpace: "nowrap" }}
@@ -362,7 +363,7 @@ export default function ShopSection() {
             </section>
 
             {/* 4. Products Grid Area (Trending Now) logic untouched background does not conflict */}
-            <section id="trending-now" className="relative w-full bg-[#1A1A1A] py-16 md:py-24 z-20 min-h-screen border-t border-white/10">
+            <section id="trending-now" className="relative w-full bg-[#1A1A1A] pt-[80px] pb-16 md:py-24 z-20 min-h-screen border-t border-white/10">
                 <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent" />
 
                 {/* Fallback pattern logic untouched if desired, keeping clean #1A1A1A */}
@@ -403,14 +404,7 @@ export default function ShopSection() {
                         data={filteredProducts}
                     />
 
-                    {/* Load More Button */}
-                    {!activeBrand && (
-                        <div className="mt-16 text-center pb-20">
-                            <button className="border border-white/20 text-white px-10 py-4 uppercase tracking-[0.2em] text-xs font-bold hover:bg-white hover:text-brand-black transition-colors duration-300 rounded-sm">
-                                View All Products
-                            </button>
-                        </div>
-                    )}
+                    {/* Removed Load More Button per user request */}
                 </div>
             </section>
         </div>

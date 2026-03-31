@@ -3,10 +3,11 @@
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { Search, ShoppingBag, Menu, X, Instagram, ChevronDown } from "lucide-react";
+import { ShoppingBag, Menu, X, Instagram, ChevronDown } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useCart } from "@/context/CartContext";
 import { brands } from "@/data";
+import { UserMenuButton } from "@/components/auth-modal";
 
 const smoothScrollTo = (id: string) => {
     const el = document.getElementById(id);
@@ -135,11 +136,11 @@ export default function Navbar() {
                         <button onClick={() => smoothScrollTo("community")} className={linkClasses(isScrolled)}>Community</button>
                     </nav>
 
-                    {/* Actions */}
+                    {/* Actions: User → Cart → Hamburger */}
                     <div className="flex items-center gap-3 sm:gap-4 relative z-50">
-                        <button className={`${isScrolled ? "text-brand-black" : "text-white"} hover:text-brand-red transition-colors p-1`}>
-                            <Search size={22} className="w-5 h-5 md:w-[22px] md:h-[22px]" />
-                        </button>
+                        {/* User icon */}
+                        <UserMenuButton />
+                        {/* Cart */}
                         <button
                             onClick={toggleCart}
                             className={`${isScrolled ? "text-brand-black" : "text-white"} hover:text-brand-red transition-colors relative p-1`}

@@ -13,7 +13,7 @@ export default function WhatsappButton() {
             animate={{ scale: 1 }}
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.9 }}
-            className="fixed bottom-6 right-6 z-50 bg-[#25D366] text-white p-4 rounded-full shadow-lg flex items-center justify-center hover:bg-[#1ebd5a] transition-colors group"
+            className="fixed bottom-24 right-6 z-[160] bg-[#25D366] text-white p-4 rounded-full shadow-lg flex items-center justify-center hover:bg-[#1ebd5a] transition-colors group"
             aria-label="Chat with us on WhatsApp"
         >
             <MessageCircle size={32} />
