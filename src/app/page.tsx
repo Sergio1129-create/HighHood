@@ -4,8 +4,8 @@ import ShopSection from "@/components/shop-section";
 import SocialReels from "@/components/reels";
 import TrustFeatures from "@/components/features";
 import Footer from "@/components/footer";
-import WhatsappButton from "@/components/whatsapp-button";
 import CartDrawer from "@/components/cart-drawer";
+import WhatsappButton from "@/components/whatsapp-button";
 import { SubscribeButton } from "@/components/subscribe-modal";
 
 export default function Home() {
