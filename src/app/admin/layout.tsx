@@ -7,6 +7,7 @@ import {
     Package,
     Image as ImageIcon,
     BarChart3,
+    Users,
     Menu,
     X,
     LogOut,
@@ -20,10 +21,10 @@ const SIDEBAR_MINI = 72;
 const DEFAULT_ADMIN_BG = "/images/fondo-admin.png";
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
-    const [sidebarOpen, setSidebarOpen]     = useState(true);
+    const [sidebarOpen, setSidebarOpen] = useState(true);
     const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
-    const [activeTab, setActiveTab]         = useState("products");
-    const [adminBg, setAdminBg]             = useState(DEFAULT_ADMIN_BG);
+    const [activeTab, setActiveTab] = useState("products");
+    const [adminBg, setAdminBg] = useState(DEFAULT_ADMIN_BG);
 
     // Leer fondo del admin desde localStorage
     useEffect(() => {
@@ -44,11 +45,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         if (mobileDrawerOpen) setMobileDrawerOpen(false);
     };
 
-    // Orden: Productos → Métricas → Imágenes (última)
+    // Orden: Productos → Métricas → Clientes → Imágenes (última)
     const sidebarItems = [
         { id: "products", label: "Productos", icon: <Package size={20} /> },
-        { id: "metrics",  label: "Métricas",  icon: <BarChart3 size={20} /> },
-        { id: "images",   label: "Imágenes",  icon: <ImageIcon size={20} /> },
+        { id: "metrics", label: "Métricas", icon: <BarChart3 size={20} /> },
+        { id: "customers", label: "Clientes", icon: <Users size={20} /> },
+        { id: "images", label: "Imágenes", icon: <ImageIcon size={20} /> },
     ];
 
     const sidebarW = sidebarOpen ? SIDEBAR_FULL : SIDEBAR_MINI;

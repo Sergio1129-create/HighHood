@@ -5,32 +5,17 @@ import {
     Plus, Trash2, Edit, Image as ImageIcon, Box, BarChart3,
     TrendingUp, TrendingDown, ShoppingCart, Users, Package,
     DollarSign, Clock, CheckCircle, XCircle, Truck, AlertTriangle,
-    Layers, RefreshCw,
+    Layers, RefreshCw, Search, ArrowLeft,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 // Server Actions
 import { getAdminProducts, createProduct, updateProduct, deleteProduct, ProductInput } from "@/actions/admin-products";
-import { getBrands, createBrand, getCategories, createCategory } from "@/actions/admin-catalogs";
+import { getBrands, createBrand, deleteBrand, getCategories, createCategory } from "@/actions/admin-catalogs";
+import { getAdminMetrics } from "@/actions/admin-metrics";
+import { getAdminCustomers, updateOrderStatus } from "@/actions/admin-customers";
 
-type Tab = "products" | "metrics" | "images";
-
-const mockOrders = [
-    { id: "HH-202403-a1b2c3", customer: "Carlos Ruiz", total: 1200000, status: "delivered", date: "2024-03-28", items: 2 },
-    { id: "HH-202403-d4e5f6", customer: "Laura Gómez", total: 450000, status: "shipped", date: "2024-03-27", items: 1 },
-    { id: "HH-202403-g7h8i9", customer: "Andrés López", total: 310000, status: "processing", date: "2024-03-27", items: 1 },
-    { id: "HH-202403-j0k1l2", customer: "María Castro", total: 850000, status: "confirmed", date: "2024-03-26", items: 3 },
-    { id: "HH-202403-m3n4o5", customer: "Felipe Torres", total: 980000, status: "cancelled", date: "2024-03-25", items: 2 },
-    { id: "HH-202403-p6q7r8", customer: "Valeria Niño", total: 250000, status: "delivered", date: "2024-03-24", items: 1 },
-    { id: "HH-202403-s9t0u1", customer: "Daniel Mora", total: 1430000, status: "pending", date: "2024-03-24", items: 4 },
-];
-
-const mockTopProducts = [
-    { name: "Supreme Box Logo Hoodie", brand: "SUPREME", sold: 48, revenue: 57600000 },
-    { name: "BAPE Shark Hoodie", brand: "BAPE", sold: 31, revenue: 26350000 },
-    { name: "Palace Tri-Ferg Cap", brand: "PALACE", sold: 67, revenue: 20770000 },
-    { name: "Stussy 8 Ball Tee", brand: "STUSSY", sold: 92, revenue: 18308000 },
-];
+type Tab = "products" | "metrics" | "customers" | "images";
 
 const statusConfig: Record<string, { label: string; color: string; icon: React.ReactNode }> = {
     pending: { label: "Pendiente", color: "text-yellow-400 bg-yellow-500/10 border-yellow-500/20", icon: <Clock size={12} /> },
@@ -56,11 +41,17 @@ export default function AdminDashboard() {
     const [activeTab, setActiveTab] = useState<Tab>("products");
     const [isMounted, setIsMounted] = useState(false);
     const [isPending, startTransition] = useTransition();
+    const [isOperatingBrand, setIsOperatingBrand] = useState(false);
 
     // ── Server Data ─────────────────────────────────────────────────────────────
     const [products, setProducts] = useState<any[]>([]);
     const [brands, setBrands] = useState<any[]>([]);
     const [categories, setCategories] = useState<any[]>([]);
+    const [orders, setOrders] = useState<any[]>([]);
+    const [customers, setCustomers] = useState<any[]>([]);
+    const [customerSearch, setCustomerSearch] = useState("");
+    const [selectedCustomerId, setSelectedCustomerId] = useState<string | null>(null);
+    const [metrics, setMetrics] = useState<any>({ totalSales: 0, itemsSold: 0, totalOrders: 0, totalCustomers: 0, avgOrderValue: 0, conversionRate: 0 });
 
     // ── Forms ─────────────────────────────────────────────────────────────
     const [isEditing, setIsEditing] = useState(false);
@@ -85,11 +76,7 @@ export default function AdminDashboard() {
     const [adminBg, setAdminBg] = useState(DEFAULT_BGS.admin);
     const [editBg, setEditBg] = useState<{ key: "hero" | "shop" | "reels" | "admin"; val: string } | null>(null);
 
-    // ── Metrics (mock) ────────────────────────────────────────────────────────
-    const metrics = {
-        totalSales: 15400000, itemsSold: 142, totalOrders: 87,
-        totalCustomers: 64, avgOrderValue: 177011, conversionRate: 3.2,
-    };
+
 
     // ── Init Data ──────────────────────────────────────────────────────────────────
     useEffect(() => {
@@ -110,14 +97,19 @@ export default function AdminDashboard() {
 
     const loadData = async () => {
         try {
-            const [p, b, c] = await Promise.all([
+            const [p, b, c, m, custs] = await Promise.all([
                 getAdminProducts(),
                 getBrands(),
-                getCategories()
+                getCategories(),
+                getAdminMetrics(),
+                getAdminCustomers()
             ]);
             setProducts(p);
             setBrands(b);
             setCategories(c);
+            setMetrics(m.metrics);
+            setOrders(m.recentOrders);
+            setCustomers(custs);
         } catch (error) {
             console.error("Admin Load Error:", error);
         }
@@ -183,16 +175,41 @@ export default function AdminDashboard() {
 
     const handleCreateBrandInline = async () => {
         if (!newBrandName.trim()) return;
-        const b = await createBrand(newBrandName.trim());
-        setBrands([...brands, b]);
-        setCurrentProduct(prev => ({ ...prev, brand_id: b.id }));
-        setIsCreatingBrand(false);
-        setNewBrandName("");
+        setIsOperatingBrand(true);
+        try {
+            const b = await createBrand(newBrandName.trim());
+            setBrands([...brands, b]);
+            setCurrentProduct(prev => ({ ...prev, brand_id: b.id }));
+            setIsCreatingBrand(false);
+            setNewBrandName("");
+        } finally {
+            setIsOperatingBrand(false);
+        }
+    };
+
+    const handleDeleteBrand = async () => {
+        if (!currentProduct.brand_id) return;
+        const brandToDelete = brands.find(b => b.id === currentProduct.brand_id);
+        if (!brandToDelete) return;
+
+        if (!confirm(`¿Estás seguro de eliminar la marca "${brandToDelete.name}"? Esto la quitará de todos los productos y menús.`)) return;
+
+        setIsOperatingBrand(true);
+        try {
+            await deleteBrand(brandToDelete.id);
+            setBrands(brands.filter(b => b.id !== brandToDelete.id));
+            setCurrentProduct(prev => ({ ...prev, brand_id: "" }));
+        } catch (error) {
+            console.error("Error deleting brand:", error);
+            alert("No se pudo eliminar la marca. Es posible que tenga productos asociados.");
+        } finally {
+            setIsOperatingBrand(false);
+        }
     };
 
     const openCreateForm = () => {
         setIsEditing(false);
-        setCurrentProduct({ base_price: 0, is_active: true });
+        setCurrentProduct({ base_price: 0, is_active: true, is_trending: false });
         setFormVariants([{ size: "M", stock_quantity: 1 }]);
         setFormImages([{ url: "", is_primary: true }]);
         setShowForm(true);
@@ -208,6 +225,7 @@ export default function AdminDashboard() {
             base_price: Number(p.base_price),
             sale_price: p.sale_price ? Number(p.sale_price) : null,
             is_active: p.is_active,
+            is_trending: p.is_trending || false,
         });
         setFormVariants(p.variants.map((v: any) => ({ id: v.id, size: v.size, color: v.color, stock_quantity: v.stock_quantity, sku: v.sku })));
         setFormImages(p.images.map((img: any) => ({ id: img.id, url: img.url, is_primary: img.is_primary })));
@@ -225,6 +243,7 @@ export default function AdminDashboard() {
             base_price: currentProduct.base_price,
             sale_price: currentProduct.sale_price,
             is_active: currentProduct.is_active,
+            is_trending: currentProduct.is_trending,
             variants: formVariants,
             images: formImages
         };
@@ -248,8 +267,29 @@ export default function AdminDashboard() {
             });
         }
     };
+    const handleStatusChange = (orderId: string, newStatus: string) => {
+        // 1. Optimistic Update (Immediate Feedback to the USER)
+        setCustomers(prev => prev.map(c => ({
+            ...c,
+            orders: c.orders.map((o: any) => o.id === orderId ? { ...o, status: newStatus } : o)
+        })));
+        setOrders(prev => prev.map(o => o.id === orderId ? { ...o, status: newStatus.toLowerCase() } : o));
 
+        // 2. Background Sync (No loading spinners)
+        updateOrderStatus(orderId, newStatus).catch(error => {
+            console.error("Error optimista:", error);
+            alert("No se pudo sincronizar el estado. Recargando...");
+            loadData(); // Revert back to truth if network fails
+        });
+    };
     const totalStockSummary = (variants: any[]) => variants.reduce((acc, v) => acc + v.stock_quantity, 0);
+
+    const filteredCustomers = customers.filter(c => {
+        if (!customerSearch) return true;
+        const query = customerSearch.toLowerCase();
+        return c.name.toLowerCase().includes(query) || c.email.toLowerCase().includes(query);
+    });
+    const selectedCustomerData = customers.find(c => c.id === selectedCustomerId);
 
     return (
         <div className="space-y-6 text-white/80">
@@ -292,17 +332,22 @@ export default function AdminDashboard() {
                                             <label className={labelCls}>Marca</label>
                                             {!isCreatingBrand ? (
                                                 <div className="flex gap-2">
-                                                    <select value={currentProduct.brand_id || ""} onChange={e => setCurrentProduct({ ...currentProduct, brand_id: e.target.value })} className={inputCls} disabled={isPending}>
+                                                    <select value={currentProduct.brand_id || ""} onChange={e => setCurrentProduct({ ...currentProduct, brand_id: e.target.value })} className={inputCls} disabled={isPending || isOperatingBrand}>
                                                         <option value="">(Sin Marca)</option>
                                                         {brands.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
                                                     </select>
-                                                    <button type="button" onClick={() => setIsCreatingBrand(true)} className="px-3 bg-white/5 border border-white/10 rounded-xl">+</button>
+                                                    {currentProduct.brand_id && (
+                                                        <button type="button" onClick={handleDeleteBrand} className="px-3 text-red-500 bg-red-500/10 border border-red-500/20 hover:bg-red-500/20 rounded-xl transition-all" disabled={isPending || isOperatingBrand}>
+                                                            <Trash2 size={16} />
+                                                        </button>
+                                                    )}
+                                                    <button type="button" onClick={() => setIsCreatingBrand(true)} className="px-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl transition-all" disabled={isPending || isOperatingBrand}>+</button>
                                                 </div>
                                             ) : (
                                                 <div className="flex gap-2">
-                                                    <input type="text" value={newBrandName} onChange={e => setNewBrandName(e.target.value)} placeholder="Nueva marca..." className={inputCls} />
-                                                    <button type="button" onClick={handleCreateBrandInline} className="px-4 text-[10px] font-bold bg-white/10 hover:bg-white/20 rounded-xl transition-all">OK</button>
-                                                    <button type="button" onClick={() => setIsCreatingBrand(false)} className="px-3 text-white/50 hover:text-white border border-transparent hover:border-white/10 rounded-xl transition-all">X</button>
+                                                    <input type="text" value={newBrandName} onChange={e => setNewBrandName(e.target.value)} placeholder="Nueva marca..." className={inputCls} disabled={isOperatingBrand} />
+                                                    <button type="button" onClick={handleCreateBrandInline} className="px-4 text-[10px] font-bold bg-white/10 hover:bg-white/20 rounded-xl transition-all" disabled={isOperatingBrand}>OK</button>
+                                                    <button type="button" onClick={() => setIsCreatingBrand(false)} className="px-3 text-white/50 hover:text-white border border-transparent hover:border-white/10 rounded-xl transition-all" disabled={isOperatingBrand}>X</button>
                                                 </div>
                                             )}
                                         </div>
@@ -311,6 +356,17 @@ export default function AdminDashboard() {
                                         <div><label className={labelCls}>Precio Oferta (Opcional)</label><input type="number" min="0" value={currentProduct.sale_price || ""} onChange={e => setCurrentProduct({ ...currentProduct, sale_price: Number(e.target.value) })} className={inputCls} disabled={isPending} /></div>
 
                                         <div className="md:col-span-2"><label className={labelCls}>Descripción</label><textarea value={currentProduct.description || ""} onChange={e => setCurrentProduct({ ...currentProduct, description: e.target.value })} rows={2} className={inputCls} placeholder="Detalles de la prenda..." disabled={isPending} /></div>
+
+                                        <div className="md:col-span-2 flex gap-6 mt-2">
+                                            <label className="flex items-center gap-2 cursor-pointer text-sm text-white/80 font-bold uppercase tracking-widest hover:text-white transition-colors">
+                                                <input type="checkbox" checked={currentProduct.is_active ?? true} onChange={e => setCurrentProduct({ ...currentProduct, is_active: e.target.checked })} className="w-4 h-4 accent-green-500 rounded bg-white/5 border-white/10" disabled={isPending} />
+                                                🟢 Producto Activo
+                                            </label>
+                                            <label className="flex items-center gap-2 cursor-pointer text-sm text-white/80 font-bold uppercase tracking-widest hover:text-white transition-colors">
+                                                <input type="checkbox" checked={currentProduct.is_trending ?? false} onChange={e => setCurrentProduct({ ...currentProduct, is_trending: e.target.checked })} className="w-4 h-4 accent-brand-red rounded bg-white/5 border-white/10" disabled={isPending} />
+                                                🔥 Trending Now
+                                            </label>
+                                        </div>
                                     </div>
 
                                     <div className="border border-white/5 rounded-2xl p-4 sm:p-5 bg-black/20">
@@ -340,7 +396,7 @@ export default function AdminDashboard() {
                                             {formImages.map((img, idx) => (
                                                 <div key={idx} className="flex flex-wrap sm:flex-nowrap gap-3 items-center bg-white/5 p-3 rounded-xl border border-white/5">
                                                     <ImageIcon size={16} className="text-neutral-500 hidden sm:block" />
-                                                    <div className="flex-1 w-full"><input type="url" value={img.url} onChange={e => handleUpdateProductImage(idx, e.target.value)} placeholder="URL https://... o local" className={inputCls + " !py-2 !text-xs"} required /></div>
+                                                    <div className="flex-1 w-full"><input type="text" value={img.url} onChange={e => handleUpdateProductImage(idx, e.target.value)} placeholder="URL https://... o local (/images/...)" className={inputCls + " !py-2 !text-xs"} required /></div>
                                                     {img.is_primary && <span className="bg-green-500/20 text-green-400 text-[10px] font-bold px-2 py-1 rounded">PRIMARIA</span>}
                                                     <button type="button" onClick={() => handleRemoveProductImage(idx)} className="p-2 text-red-400 hover:bg-red-400/20 rounded-lg"><Trash2 size={16} /></button>
                                                 </div>
@@ -469,7 +525,7 @@ export default function AdminDashboard() {
                             <div className="bg-black/40 border border-white/5 rounded-2xl overflow-hidden">
                                 <div className="bg-black/30 px-5 py-4 border-b border-white/5 flex items-center justify-between">
                                     <h3 className="font-heading text-sm text-white uppercase tracking-widest">Órdenes Recientes</h3>
-                                    <span className="text-[10px] text-neutral-500 uppercase tracking-widest">{mockOrders.length} órdenes</span>
+                                    <span className="text-[10px] text-neutral-500 uppercase tracking-widest">{orders.length} órdenes</span>
                                 </div>
                                 <div className="overflow-x-auto">
                                     <table className="w-full text-sm min-w-[480px]">
@@ -483,7 +539,7 @@ export default function AdminDashboard() {
                                             </tr>
                                         </thead>
                                         <tbody className="divide-y divide-white/5">
-                                            {mockOrders.map(order => {
+                                            {orders.map(order => {
                                                 const st = statusConfig[order.status];
                                                 return (
                                                     <tr key={order.id} className="hover:bg-white/[0.02] transition-colors">
@@ -507,6 +563,162 @@ export default function AdminDashboard() {
                                 </div>
                             </div>
                         </div>
+                    </motion.div>
+                )}
+
+                {/* ════════════════════════════════════════════════════════════
+                    CUSTOMERS TAB
+                ════════════════════════════════════════════════════════════ */}
+                {activeTab === "customers" && (
+                    <motion.div key="customers"
+                        initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }}
+                        transition={{ duration: 0.2 }} className="space-y-6">
+
+                        <div className="bg-black/40 border border-white/5 rounded-2xl overflow-hidden">
+                            {!selectedCustomerId ? (
+                                <>
+                                    <div className="bg-black/30 px-5 py-4 border-b border-white/5 flex items-center justify-between flex-wrap gap-4">
+                                        <div>
+                                            <h3 className="font-heading text-sm text-white uppercase tracking-widest">Base de Clientes</h3>
+                                            <p className="text-[11px] text-neutral-500 mt-0.5">Control y gestión de pedidos e históricos.</p>
+                                        </div>
+                                        <div className="relative w-full max-w-xs">
+                                            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-500" />
+                                            <input
+                                                type="text"
+                                                placeholder="Buscar por nombre o email..."
+                                                value={customerSearch}
+                                                onChange={(e) => setCustomerSearch(e.target.value)}
+                                                className="w-full bg-[#111] border border-white/10 rounded-lg pl-9 pr-3 py-2 text-xs text-white placeholder-neutral-500 focus:outline-none focus:border-brand-red focus:ring-1 focus:ring-brand-red/50 transition-all font-mono"
+                                            />
+                                        </div>
+                                    </div>
+                                    <div className="overflow-x-auto min-h-[300px]">
+                                        <table className="w-full text-left text-xs min-w-[600px]">
+                                            <thead className="bg-[#151515] text-[10px] uppercase tracking-widest text-neutral-500 border-b border-white/5">
+                                                <tr>
+                                                    <th className="px-5 py-4">Cliente</th>
+                                                    <th className="px-5 py-4">Compras</th>
+                                                    <th className="px-5 py-4 text-right">Acción</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody className="divide-y divide-white/5">
+                                                {filteredCustomers.map(c => (
+                                                    <tr key={c.id} className="hover:bg-white/[0.03] cursor-pointer transition-colors" onClick={() => setSelectedCustomerId(c.id)}>
+                                                        <td className="px-5 py-4">
+                                                            <div className="flex items-center gap-3">
+                                                                <div className="w-8 h-8 rounded-full bg-brand-red/10 border border-brand-red/20 text-brand-red flex justify-center items-center"><Users size={14} /></div>
+                                                                <div>
+                                                                    <p className="font-bold text-white text-xs uppercase tracking-wider">{c.name}</p>
+                                                                    <p className="text-[10px] text-neutral-500 font-mono mt-0.5 max-w-[200px] truncate">{c.email}</p>
+                                                                </div>
+                                                            </div>
+                                                        </td>
+                                                        <td className="px-5 py-4 text-white/80">{c.orderCount} orden(es)</td>
+                                                        <td className="px-5 py-4 text-right">
+                                                            <button
+                                                                className="bg-white/5 hover:bg-brand-red/20 hover:text-brand-red border border-white/10 hover:border-brand-red/30 text-white text-[10px] font-bold tracking-widest px-3 py-2 rounded-lg uppercase transition-all"
+                                                                onClick={(e) => { e.stopPropagation(); setSelectedCustomerId(c.id); }}
+                                                            >
+                                                                Ver Detalles
+                                                            </button>
+                                                        </td>
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                        </table>
+                                        {filteredCustomers.length === 0 && <p className="text-xs text-neutral-500 text-center py-16 font-mono">No se encontraron clientes asociados.</p>}
+                                    </div>
+                                </>
+                            ) : (
+                                <>
+                                    <div className="bg-black/30 px-5 py-4 border-b border-white/5 flex items-center justify-between flex-wrap gap-4">
+                                        <div className="flex items-center gap-4">
+                                            <button onClick={() => setSelectedCustomerId(null)} className="p-2 bg-white/5 hover:bg-white/10 text-white rounded-xl transition-all border border-white/10">
+                                                <ArrowLeft size={16} />
+                                            </button>
+                                            <div>
+                                                <h3 className="font-heading text-sm text-white uppercase tracking-widest">{selectedCustomerData.name}</h3>
+                                                <p className="text-[11px] text-neutral-500 mt-0.5 font-mono">{selectedCustomerData.email}</p>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div className="p-4 sm:p-5 flex flex-col lg:flex-row gap-6 lg:items-start">
+                                        <div className="flex-shrink-0 w-full lg:w-1/4">
+                                            <div className="bg-black/40 rounded-xl p-4 border border-white/5 space-y-1">
+                                                <p className="text-[10px] text-neutral-400 uppercase tracking-widest mb-2">Desempeño del Cliente</p>
+                                                <p className="text-[10px] text-neutral-500">Total Invertido:</p>
+                                                <p className="font-bold text-green-400 text-lg mb-2">${selectedCustomerData.totalSpent.toLocaleString('es-CO')}</p>
+                                                <p className="text-[10px] text-neutral-500">Volumen:</p>
+                                                <p className="text-sm font-bold text-white">{selectedCustomerData.orderCount} compras</p>
+                                            </div>
+                                        </div>
+
+                                        <div className="flex-1 w-full bg-[#111] rounded-xl border border-white/5 overflow-hidden">
+                                            {selectedCustomerData.orders.length > 0 ? (
+                                                <table className="w-full text-left text-xs min-w-[500px]">
+                                                    <thead className="bg-[#151515] text-[10px] uppercase tracking-widest text-neutral-500 border-b border-white/5">
+                                                        <tr>
+                                                            <th className="px-4 py-3 min-w-[100px]">Orden</th>
+                                                            <th className="px-4 py-3 min-w-[150px]">Resumen</th>
+                                                            <th className="px-4 py-3 min-w-[100px]">Total</th>
+                                                            <th className="px-4 py-3 min-w-[140px]">Estado</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody className="divide-y divide-white/5">
+                                                        {selectedCustomerData.orders.map((o: any) => {
+                                                            const st = statusConfig[o.status.toLowerCase()] || statusConfig['pending'];
+                                                            return (
+                                                                <tr key={o.id} className="hover:bg-white/[0.02]">
+                                                                    <td className="px-4 py-3">
+                                                                        <span className="block font-mono text-[11px] text-brand-red">#{o.short_id}</span>
+                                                                        <span className="block text-[10px] text-neutral-500 mt-0.5">{o.date}</span>
+                                                                    </td>
+                                                                    <td className="px-4 py-3">
+                                                                        <div className="space-y-1">
+                                                                            {o.items.map((item: any, idx: number) => (
+                                                                                <div key={idx} className="flex justify-between text-[11px]">
+                                                                                    <span className="text-white/80 max-w-[100px] truncate" title={item.product}>{item.qty}x {item.product}</span>
+                                                                                    <span className="text-neutral-500 font-mono">Talla: {item.size}</span>
+                                                                                </div>
+                                                                            ))}
+                                                                        </div>
+                                                                    </td>
+                                                                    <td className="px-4 py-3 font-bold text-white">
+                                                                        ${o.total.toLocaleString('es-CO')}
+                                                                    </td>
+                                                                    <td className="px-4 py-3">
+                                                                        <select
+                                                                            value={o.status}
+                                                                            onChange={(e) => handleStatusChange(o.id, e.target.value)}
+                                                                            disabled={isPending}
+                                                                            className={`text-[10px] font-bold uppercase tracking-widest px-2 py-1.5 rounded outline-none border transition-colors cursor-pointer w-full max-w-[130px] appearance-none ${st.color}`}
+                                                                        >
+                                                                            <option value="PENDING" className="bg-[#111] text-yellow-400">PENDIENTE</option>
+                                                                            <option value="PROCESSING" className="bg-[#111] text-purple-400">PREPARANDO</option>
+                                                                            <option value="SHIPPED" className="bg-[#111] text-cyan-400">ENVIADO</option>
+                                                                            <option value="DELIVERED" className="bg-[#111] text-green-400">ENTREGADO</option>
+                                                                            <option value="CANCELLED" className="bg-[#111] text-red-500">CANCELADO</option>
+                                                                        </select>
+                                                                        <div className="text-[9px] text-neutral-600 uppercase tracking-widest mt-1.5 flex items-center justify-between">
+                                                                            {o.paymentStatus === 'COMPLETED' ? <span className="text-green-500 flex items-center gap-1"><CheckCircle size={9} /> PAGADO</span> : 'SIN PAGO'}
+                                                                        </div>
+                                                                    </td>
+                                                                </tr>
+                                                            )
+                                                        })}
+                                                    </tbody>
+                                                </table>
+                                            ) : (
+                                                <p className="text-xs text-neutral-500 p-4 font-mono">Sin compras activas registradas.</p>
+                                            )}
+                                        </div>
+                                    </div>
+                                </>
+                            )}
+                        </div>
+
                     </motion.div>
                 )}
 

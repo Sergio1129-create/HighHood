@@ -9,6 +9,10 @@ async function verifyAdmin() {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return false;
 
+    if (user.email === 'admin.highood.com' || user.email === 'admin@highhood.com') {
+        return true;
+    }
+
     const profile = await prisma.customerProfile.findUnique({
         where: { id: user.id }
     });
@@ -23,6 +27,7 @@ export type ProductInput = {
     base_price: number;
     sale_price?: number | null;
     is_active?: boolean;
+    is_trending?: boolean;
     variants: { id?: string, size: string, color?: string | null, stock_quantity: number, sku?: string | null }[];
     images: { id?: string, url: string, is_primary: boolean }[];
 };
@@ -31,15 +36,22 @@ export async function getAdminProducts() {
     const isAdmin = await verifyAdmin();
     if (!isAdmin) throw new Error("Unauthorized");
 
-    return prisma.product.findMany({
+    const products = await prisma.product.findMany({
         orderBy: { created_at: 'desc' },
         include: {
             brand: true,
             variants: true,
-            images: true,
+            images: { orderBy: { display_order: 'asc' } },
             categories: { include: { category: true } }
         }
     });
+
+    // Server actions cannot pass Decimal objects to Client Components.
+    return products.map(p => ({
+        ...p,
+        base_price: Number(p.base_price),
+        sale_price: p.sale_price ? Number(p.sale_price) : null
+    }));
 }
 
 export async function createProduct(input: ProductInput) {
@@ -59,6 +71,7 @@ export async function createProduct(input: ProductInput) {
             sale_price: input.sale_price,
             brand_id: input.brand_id,
             is_active: input.is_active ?? true,
+            is_trending: input.is_trending ?? false,
             variants: {
                 create: input.variants.map(v => ({
                     size: v.size,
@@ -78,7 +91,14 @@ export async function createProduct(input: ProductInput) {
     });
 
     revalidatePath("/admin");
-    return { success: true, product: newProduct };
+    return {
+        success: true,
+        product: {
+            ...newProduct,
+            base_price: Number(newProduct.base_price),
+            sale_price: newProduct.sale_price ? Number(newProduct.sale_price) : null
+        }
+    };
 }
 
 export async function updateProduct(id: string, input: ProductInput) {
@@ -100,6 +120,7 @@ export async function updateProduct(id: string, input: ProductInput) {
             sale_price: input.sale_price,
             brand_id: input.brand_id,
             is_active: input.is_active ?? true,
+            is_trending: input.is_trending ?? false,
         }
     });
 
@@ -149,7 +170,14 @@ export async function updateProduct(id: string, input: ProductInput) {
     }
 
     revalidatePath("/admin");
-    return { success: true, product };
+    return {
+        success: true,
+        product: {
+            ...product,
+            base_price: Number(product.base_price),
+            sale_price: product.sale_price ? Number(product.sale_price) : null
+        }
+    };
 }
 
 export async function deleteProduct(id: string) {

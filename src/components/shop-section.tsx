@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { brands, products } from "@/data";
+// Ya no usamos import { brands, products } from "@/data";
 import {
     motion,
     AnimatePresence,
@@ -39,7 +39,7 @@ interface Product {
     salePrice?: number;
 }
 
-const ProductCarousel = ({ title, data, badgeStr, isOffer }: { title: string, data: Product[], badgeStr?: string, isOffer?: boolean }) => {
+const ProductCarousel = ({ title, data, badgeStr, isOffer, emptyMessage = "No hay productos disponibles." }: { title: string, data: Product[], badgeStr?: string, isOffer?: boolean, emptyMessage?: string }) => {
     const { addItem } = useCart();
 
     // Custom Navigation Button setup
@@ -47,7 +47,29 @@ const ProductCarousel = ({ title, data, badgeStr, isOffer }: { title: string, da
     const nextRef = useRef<HTMLButtonElement>(null);
     const [_, setInit] = useState<boolean>(false);
 
-    if (data.length === 0) return null;
+    if (data.length === 0) {
+        return (
+            <motion.div
+                initial={{ opacity: 0, y: 15 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: "-100px" }}
+                transition={{ duration: 0.4, ease: "easeOut" }}
+                className="mb-6 sm:mb-8 md:mb-10 last:mb-0"
+            >
+                <div className="flex items-center mb-4 sm:mb-6 md:mb-8 px-4 md:px-8 max-w-[1600px] mx-auto relative z-20">
+                    <h2 className="font-heading text-3xl sm:text-4xl md:text-5xl text-white/40 drop-shadow-md uppercase tracking-widest flex items-center gap-3">
+                        {title}
+                        {badgeStr && <span className="text-4xl sm:text-5xl md:text-6xl grayscale opacity-50">{badgeStr}</span>}
+                    </h2>
+                </div>
+                <div className="px-4 md:px-8 max-w-[1600px] mx-auto relative z-20">
+                    <div className="flex flex-col items-center justify-center py-10 text-center border border-white/5 border-dashed rounded-3xl bg-black/20">
+                        <p className="text-sm text-neutral-500 max-w-sm uppercase tracking-widest">{emptyMessage}</p>
+                    </div>
+                </div>
+            </motion.div>
+        );
+    }
 
     return (
         <motion.div
@@ -162,7 +184,7 @@ const ProductCarousel = ({ title, data, badgeStr, isOffer }: { title: string, da
     );
 };
 
-export default function ShopSection() {
+export default function ShopSection({ initialProducts = [] }: { initialProducts?: Product[] }) {
     const [activeBrand, setActiveBrand] = useState<string | null>(null);
     const [isHovered, setIsHovered] = useState(false);
     const { addItem } = useCart();
@@ -255,8 +277,13 @@ export default function ShopSection() {
     };
 
     const filteredProducts = activeBrand
-        ? products.filter((p) => p.brand === activeBrand)
-        : products;
+        ? initialProducts.filter((p) => p.brand === activeBrand)
+        : initialProducts;
+
+    // Calcular marcas activas basadas en la Base de Datos
+    const availableBrands = Array.from(new Set(initialProducts.map(p => p.brand))).filter(b => b && b !== "Sin Marca");
+    const displayBrands = availableBrands.length > 0 ? availableBrands : ["HIGHHOOD"]; // Fallback
+    const loopBrands = [...displayBrands, ...displayBrands, ...displayBrands, ...displayBrands];
 
     return (
         <div id="shop" className="w-full flex flex-col bg-brand-black relative">
@@ -345,7 +372,7 @@ export default function ShopSection() {
                             onTouchEnd={() => setIsHovered(false)}
                         >
                             {/* 4 sets of brands for seamless looping */}
-                            {[...brands, ...brands, ...brands, ...brands].map((brand, i) => (
+                            {loopBrands.map((brand, i) => (
                                 <button
                                     key={`${brand}-${i}`}
                                     onClick={() => setActiveBrand(activeBrand === brand ? null : brand)}
@@ -389,19 +416,22 @@ export default function ShopSection() {
                     <ProductCarousel
                         title={activeBrand ? `${activeBrand} DROPS` : "Trending Now"}
                         badgeStr={!activeBrand ? "🔥" : undefined}
-                        data={filteredProducts.filter(p => activeBrand ? true : p.trending)}
+                        data={filteredProducts.filter(p => p.trending)}
+                        emptyMessage={activeBrand ? `No hay drops disponibles de ${activeBrand} en tendencia.` : "Nuestro radar no detecta prendas en tendencia. 🧊"}
                     />
 
                     <ProductCarousel
                         title="Offers"
                         badgeStr="💸"
-                        data={filteredProducts.filter(p => activeBrand ? p.onSale : p.onSale)}
+                        data={filteredProducts.filter(p => p.onSale)}
                         isOffer={true}
+                        emptyMessage="Aún no hay descuentos activos. Los verdaderos drops llegan pronto. 🚫💸"
                     />
 
                     <ProductCarousel
                         title="All Products"
                         data={filteredProducts}
+                        emptyMessage="Tu bóveda está vacía. Entra al Panel de Administrador para cargar el próximo Drop. 🛒"
                     />
 
                     {/* Removed Load More Button per user request */}

@@ -6,8 +6,8 @@ import Image from "next/image";
 import { ShoppingBag, Menu, X, Instagram, ChevronDown } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useCart } from "@/context/CartContext";
-import { brands } from "@/data";
 import { UserMenuButton } from "@/components/auth-modal";
+import { getPublicBrands } from "@/actions/public-products";
 
 const smoothScrollTo = (id: string) => {
     const el = document.getElementById(id);
@@ -21,6 +21,11 @@ export default function Navbar() {
     const [mobileBrandsOpen, setMobileBrandsOpen] = useState(false);
     const { totalItems, toggleCart } = useCart();
     const brandsRef = useRef<HTMLDivElement>(null);
+    const [dbBrands, setDbBrands] = useState<any[]>([]);
+
+    useEffect(() => {
+        getPublicBrands().then(brands => setDbBrands(brands)).catch(console.error);
+    }, []);
 
     useEffect(() => {
         const handleScroll = () => {
@@ -115,13 +120,13 @@ export default function Navbar() {
                                         transition={{ duration: 0.15 }}
                                         className="absolute top-full left-1/2 -translate-x-1/2 mt-3 w-56 bg-white/95 backdrop-blur-xl rounded-lg shadow-2xl border border-black/5 overflow-hidden py-2 z-[999]"
                                     >
-                                        {brands.map((brand) => (
+                                        {dbBrands.map((brand, i) => (
                                             <button
-                                                key={brand}
-                                                onClick={() => handleBrandClick(brand)}
+                                                key={`${brand.id || i}`}
+                                                onClick={() => handleBrandClick(brand.name)}
                                                 className="w-full text-left px-5 py-2.5 text-sm font-medium text-brand-black uppercase tracking-widest hover:bg-brand-red hover:text-white transition-colors duration-150"
                                             >
-                                                {brand}
+                                                {brand.name}
                                             </button>
                                         ))}
                                     </motion.div>
@@ -194,13 +199,13 @@ export default function Navbar() {
                                             transition={{ duration: 0.25 }}
                                             className="overflow-hidden flex flex-col items-center gap-3 mt-3"
                                         >
-                                            {brands.map((brand) => (
+                                            {dbBrands.map((brand, i) => (
                                                 <button
-                                                    key={brand}
-                                                    onClick={() => handleBrandClick(brand)}
-                                                    className="text-lg text-neutral-500 hover:text-brand-red uppercase tracking-widest transition-colors"
+                                                    key={`${brand.id || i}`}
+                                                    onClick={() => handleBrandClick(brand.name)}
+                                                    className="block w-full text-left px-5 py-3 text-sm font-medium tracking-wider hover:bg-neutral-100 hover:text-brand-red uppercase transition-colors"
                                                 >
-                                                    {brand}
+                                                    {brand.name}
                                                 </button>
                                             ))}
                                         </motion.div>

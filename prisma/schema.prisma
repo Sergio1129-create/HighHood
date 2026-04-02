@@ -91,6 +91,7 @@ model Product {
   base_price  Decimal  @db.Decimal(10, 2)
   sale_price  Decimal? @db.Decimal(10, 2)
   is_active   Boolean  @default(true)
+  is_trending Boolean  @default(false)
   created_at  DateTime @default(now()) @db.Timestamptz(6)
   updated_at  DateTime @default(now()) @updatedAt @db.Timestamptz(6)
 
