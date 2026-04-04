@@ -9,12 +9,25 @@ import { useRef, useState, useEffect } from "react";
 export default function HeroSection() {
     const ref = useRef(null);
     const [isMobile, setIsMobile] = useState(false);
+    const [bgImage, setBgImage] = useState("/images/fondo-hero.png");
 
     useEffect(() => {
         const checkMobile = () => setIsMobile(window.innerWidth < 768);
         checkMobile();
         window.addEventListener('resize', checkMobile);
-        return () => window.removeEventListener('resize', checkMobile);
+        
+        const saved = localStorage.getItem("hh_bg_hero");
+        if (saved) setBgImage(saved);
+
+        const handleStorage = (e: StorageEvent) => {
+            if (e.key === "hh_bg_hero") setBgImage(e.newValue || "/images/fondo-hero.png");
+        };
+        window.addEventListener("storage", handleStorage);
+
+        return () => {
+            window.removeEventListener('resize', checkMobile);
+            window.removeEventListener("storage", handleStorage);
+        };
     }, []);
 
     const { scrollYProgress } = useScroll({
@@ -31,7 +44,7 @@ export default function HeroSection() {
             {/* Background Image with Parallax (Parallax disabled on mobile) */}
             <motion.div style={{ y: parallaxY, opacity: parallaxOpacity }} className={`absolute inset-0 z-0 ${isMobile ? 'fixed' : ''}`}>
                 <Image
-                    src="/images/fondo-hero.png"
+                    src={bgImage}
                     alt="Urban Street Graffiti Background"
                     fill
                     className="object-cover object-center"

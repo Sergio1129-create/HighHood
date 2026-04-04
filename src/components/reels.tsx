@@ -27,6 +27,20 @@ export default function SocialReels() {
         }
     };
 
+    const [bgImage, setBgImage] = useState("/images/fondo-reels.png");
+
+    useEffect(() => {
+        const saved = localStorage.getItem("hh_bg_reels");
+        if (saved) setBgImage(saved);
+
+        const handleStorage = (e: StorageEvent) => {
+            if (e.key === "hh_bg_reels") setBgImage(e.newValue || "/images/fondo-reels.png");
+        };
+        window.addEventListener("storage", handleStorage);
+
+        return () => window.removeEventListener("storage", handleStorage);
+    }, []);
+
     // Auto-pause when native mobile swiping occurs
     useEffect(() => {
         const container = containerRef.current;
@@ -48,7 +62,7 @@ export default function SocialReels() {
         <section id="community" className="bg-brand-black overflow-hidden relative pb-16 sm:pb-20">
             {/* Background Image */}
             <Image
-                src="/images/fondo-reels.png"
+                src={bgImage}
                 alt="Reels Background"
                 fill
                 className="object-cover object-center opacity-20 pointer-events-none z-0"

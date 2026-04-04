@@ -87,7 +87,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
             {/* ── Fondo global (sidebar, topbar) ─────────────────────────── */}
             <div className="fixed inset-0 z-0 pointer-events-none">
-                <Image src="/images/brands-bg.png" alt="" fill className="object-cover opacity-[0.03] invert" priority />
+                <Image src={adminBg} alt="" fill className="object-cover opacity-[0.03] invert" priority />
                 <div className="absolute inset-0 bg-gradient-to-br from-brand-black/95 via-brand-black/98 to-brand-black" />
             </div>
 
@@ -105,7 +105,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                             transition={{ type: "tween", duration: 0.26, ease: "easeOut" }}
                             className="fixed top-0 left-0 bottom-0 w-64 z-[90] flex flex-col overflow-hidden lg:hidden"
                         >
-                            <Image src="/images/brands-bg.png" fill alt="" className="object-cover opacity-20 mix-blend-overlay pointer-events-none" />
+                            <Image src={adminBg} fill alt="" className="object-cover opacity-20 mix-blend-overlay pointer-events-none" />
                             <div className="absolute inset-0 bg-black/85 backdrop-blur-2xl pointer-events-none" />
                             <div className="relative z-10 flex flex-col h-full">
                                 <div className="h-14 flex items-center justify-between px-5 border-b border-white/5 flex-shrink-0">
@@ -136,7 +136,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 transition={{ type: "tween", duration: 0.22, ease: "easeInOut" }}
                 className="hidden lg:flex fixed top-0 left-0 bottom-0 border-r border-white/5 z-[60] flex-col overflow-hidden"
             >
-                <Image src="/images/brands-bg.png" fill alt="" className="object-cover opacity-20 mix-blend-overlay pointer-events-none" />
+                <Image src={adminBg} fill alt="" className="object-cover opacity-20 mix-blend-overlay pointer-events-none" />
                 <div className="absolute inset-0 bg-black/85 backdrop-blur-3xl pointer-events-none" />
                 <div className="relative z-10 flex flex-col h-full">
                     <div className="h-16 flex items-center px-4 border-b border-white/5 justify-between flex-shrink-0 overflow-hidden">

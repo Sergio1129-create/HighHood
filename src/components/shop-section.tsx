@@ -189,12 +189,25 @@ export default function ShopSection({ initialProducts = [] }: { initialProducts?
     const [isHovered, setIsHovered] = useState(false);
     const { addItem } = useCart();
     const [isMobile, setIsMobile] = useState(false);
+    const [bgImage, setBgImage] = useState("/images/brands-bg.png");
 
     useEffect(() => {
         const checkMobile = () => setIsMobile(window.innerWidth < 768);
         checkMobile();
         window.addEventListener("resize", checkMobile);
-        return () => window.removeEventListener("resize", checkMobile);
+
+        const saved = localStorage.getItem("hh_bg_shop");
+        if (saved) setBgImage(saved);
+
+        const handleStorage = (e: StorageEvent) => {
+            if (e.key === "hh_bg_shop") setBgImage(e.newValue || "/images/brands-bg.png");
+        };
+        window.addEventListener("storage", handleStorage);
+
+        return () => {
+            window.removeEventListener("resize", checkMobile);
+            window.removeEventListener("storage", handleStorage);
+        };
     }, []);
 
     // Listen for brand-select events from the Navbar dropdown
@@ -395,7 +408,7 @@ export default function ShopSection({ initialProducts = [] }: { initialProducts?
 
                 {/* Fallback pattern logic untouched if desired, keeping clean #1A1A1A */}
                 <Image
-                    src="/images/brands-bg.png"
+                    src={bgImage}
                     alt="Street Graffiti Background"
                     fill
                     className="absolute inset-0 object-cover object-center opacity-30 pointer-events-none mix-blend-overlay"

@@ -8,12 +8,14 @@ import {
     Layers, RefreshCw, Search, ArrowLeft,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import Image from "next/image";
 
 // Server Actions
 import { getAdminProducts, createProduct, updateProduct, deleteProduct, ProductInput } from "@/actions/admin-products";
 import { getBrands, createBrand, deleteBrand, getCategories, createCategory } from "@/actions/admin-catalogs";
 import { getAdminMetrics } from "@/actions/admin-metrics";
 import { getAdminCustomers, updateOrderStatus } from "@/actions/admin-customers";
+import { ImageUploader } from "@/components/image-uploader";
 
 type Tab = "products" | "metrics" | "customers" | "images";
 
@@ -40,6 +42,7 @@ const labelCls = "block text-[11px] font-bold uppercase tracking-widest text-neu
 export default function AdminDashboard() {
     const [activeTab, setActiveTab] = useState<Tab>("products");
     const [isMounted, setIsMounted] = useState(false);
+    const [isLoadingData, setIsLoadingData] = useState(true);
     const [isPending, startTransition] = useTransition();
     const [isOperatingBrand, setIsOperatingBrand] = useState(false);
 
@@ -112,6 +115,8 @@ export default function AdminDashboard() {
             setCustomers(custs);
         } catch (error) {
             console.error("Admin Load Error:", error);
+        } finally {
+            setIsLoadingData(false);
         }
     };
 
@@ -123,9 +128,26 @@ export default function AdminDashboard() {
 
     useEffect(() => { if (isMounted) localStorage.setItem("highhood_admin_images", JSON.stringify(images)); }, [images, isMounted]);
 
-    if (!isMounted) return (
-        <div className="flex items-center justify-center min-h-[60vh]">
-            <p className="font-heading text-brand-red animate-pulse uppercase tracking-widest text-sm">Cargando Admin...</p>
+    if (!isMounted || isLoadingData) return (
+        <div className="fixed inset-0 z-50 bg-black flex flex-col items-center justify-center min-h-[100dvh]">
+            <style jsx>{`
+                @keyframes rotate-logo-fast {
+                    0% { transform: rotate(0deg); }
+                    100% { transform: rotate(360deg); }
+                }
+            `}</style>
+            <div 
+                className="relative w-[100px] h-[80px] mb-6 drop-shadow-[0_0_15px_rgba(255,0,0,0.3)]"
+                style={{
+                    animation: "rotate-logo-fast 1s cubic-bezier(0.5, 0, 0.5, 1) infinite",
+                    willChange: "transform",
+                }}
+            >
+                <Image src="/images/logo.png" alt="Cargando" fill className="object-contain" priority />
+            </div>
+            <p className="font-heading text-white uppercase tracking-[0.3em] text-xs sm:text-sm animate-pulse flex items-center gap-2">
+                Demasiado estilo para tu conexión... <span className="text-brand-red bg-brand-red rounded-full w-1.5 h-1.5 animate-ping" />
+            </p>
         </div>
     );
 
@@ -141,15 +163,19 @@ export default function AdminDashboard() {
     };
     const handleSaveBg = () => {
         if (!editBg) return;
-        if (editBg.key === "hero") { setHeroBg(editBg.val); localStorage.setItem("hh_bg_hero", editBg.val); }
-        if (editBg.key === "shop") { setShopBg(editBg.val); localStorage.setItem("hh_bg_shop", editBg.val); }
-        if (editBg.key === "reels") { setReelsBg(editBg.val); localStorage.setItem("hh_bg_reels", editBg.val); }
-        if (editBg.key === "admin") {
-            setAdminBg(editBg.val);
-            localStorage.setItem("hh_bg_admin", editBg.val);
-            window.dispatchEvent(new CustomEvent("admin:bgChange", { detail: editBg.val }));
-        }
+        handleSetBgUrl(editBg.key, editBg.val);
         setEditBg(null);
+    };
+
+    const handleSetBgUrl = (key: "hero" | "shop" | "reels" | "admin", url: string) => {
+        if (key === "hero") { setHeroBg(url); localStorage.setItem("hh_bg_hero", url); }
+        if (key === "shop") { setShopBg(url); localStorage.setItem("hh_bg_shop", url); }
+        if (key === "reels") { setReelsBg(url); localStorage.setItem("hh_bg_reels", url); }
+        if (key === "admin") {
+            setAdminBg(url);
+            localStorage.setItem("hh_bg_admin", url);
+            window.dispatchEvent(new CustomEvent("admin:bgChange", { detail: url }));
+        }
     };
     const resetBg = (key: "hero" | "shop" | "reels" | "admin") => {
         if (key === "hero") { setHeroBg(DEFAULT_BGS.hero); localStorage.removeItem("hh_bg_hero"); }
@@ -392,13 +418,32 @@ export default function AdminDashboard() {
                                             <label className={labelCls + " !mb-0"}>Imágenes del Producto</label>
                                             <button type="button" onClick={handleAddProductImage} className="text-[10px] font-bold uppercase tracking-widest text-brand-red bg-brand-red/10 px-3 py-1.5 rounded-lg hover:bg-brand-red/20 transition-colors">+ Añadir Img</button>
                                         </div>
-                                        <div className="space-y-3">
+                                        <div className="space-y-4">
                                             {formImages.map((img, idx) => (
-                                                <div key={idx} className="flex flex-wrap sm:flex-nowrap gap-3 items-center bg-white/5 p-3 rounded-xl border border-white/5">
-                                                    <ImageIcon size={16} className="text-neutral-500 hidden sm:block" />
-                                                    <div className="flex-1 w-full"><input type="text" value={img.url} onChange={e => handleUpdateProductImage(idx, e.target.value)} placeholder="URL https://... o local (/images/...)" className={inputCls + " !py-2 !text-xs"} required /></div>
-                                                    {img.is_primary && <span className="bg-green-500/20 text-green-400 text-[10px] font-bold px-2 py-1 rounded">PRIMARIA</span>}
-                                                    <button type="button" onClick={() => handleRemoveProductImage(idx)} className="p-2 text-red-400 hover:bg-red-400/20 rounded-lg"><Trash2 size={16} /></button>
+                                                <div key={idx} className="flex flex-col sm:flex-row gap-4 items-center bg-white/5 p-4 rounded-xl border border-white/5 relative">
+                                                    <div className="w-full sm:w-1/3">
+                                                        <ImageUploader 
+                                                            value={img.url} 
+                                                            onUploadSuccess={(url) => handleUpdateProductImage(idx, url)} 
+                                                            onClear={() => handleUpdateProductImage(idx, "")} 
+                                                        />
+                                                    </div>
+                                                    <div className="flex-1 w-full space-y-3">
+                                                        <input type="text" value={img.url} onChange={e => handleUpdateProductImage(idx, e.target.value)} placeholder="URL https://... o local (/images/...)" className={inputCls + " !py-2 !text-xs"} required />
+                                                        <div className="flex items-center gap-3">
+                                                            {img.is_primary ? (
+                                                                <span className="bg-green-500/20 text-green-400 text-[10px] font-bold px-3 py-1.5 rounded-lg flex items-center justify-center flex-1">PRIMARIA</span>
+                                                            ) : (
+                                                                <button type="button" onClick={() => {
+                                                                    const updated = formImages.map((i, iIdx) => ({ ...i, is_primary: iIdx === idx }));
+                                                                    setFormImages(updated);
+                                                                }} className="text-[10px] font-bold px-3 py-1.5 rounded-lg border border-white/10 hover:bg-white/5 transition-colors flex items-center justify-center flex-1">ESTABLECER PRIMARIA</button>
+                                                            )}
+                                                            <button type="button" onClick={() => handleRemoveProductImage(idx)} className="p-2 text-red-500 hover:bg-red-500/20 rounded-lg shrink-0 flex items-center gap-2 text-[10px] uppercase font-bold tracking-widest px-3 border border-red-500/20 hover:border-red-500/50 transition-colors">
+                                                                <Trash2 size={16} /> <span className="hidden sm:inline">Eliminar</span>
+                                                            </button>
+                                                        </div>
+                                                    </div>
                                                 </div>
                                             ))}
                                             {formImages.length === 0 && <p className="text-xs text-red-400">Debes asignar al menos 1 imagen principal.</p>}
@@ -735,64 +780,42 @@ export default function AdminDashboard() {
                             <Layers size={20} className="text-brand-red flex-shrink-0" />
                             <div>
                                 <h2 className="font-heading text-lg sm:text-xl uppercase tracking-widest text-white">Fondos de Secciones</h2>
-                                <p className="text-xs text-neutral-500 mt-0.5">Administrado localmente por ahora. Aquí podrás gestionar los assets globales globales.</p>
+                                <p className="text-xs text-neutral-500 mt-0.5">Administrado localmente por ahora. Aquí podrás gestionar los assets globales.</p>
                             </div>
                         </div>
 
                         {/* 4 BG cards */}
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                             {([
                                 { key: "hero" as const, label: "Hero Principal", desc: "Imagen de fondo de la sección de inicio", current: heroBg, badge: "🏠" },
                                 { key: "shop" as const, label: "Shop / Tienda", desc: "Fondo de la sección de prendas (shop-section)", current: shopBg, badge: "🛍️" },
                                 { key: "reels" as const, label: "Reels / Instagram", desc: "Fondo de la sección de reels de Instagram", current: reelsBg, badge: "🎬" },
                                 { key: "admin" as const, label: "Panel Admin", desc: "Fondo del panel de administración actual", current: adminBg, badge: "⚙️" },
                             ]).map(sec => (
-                                <div key={sec.key} className="bg-black/50 border border-white/10 rounded-2xl overflow-hidden shadow-lg group">
-                                    <div className="relative h-44 overflow-hidden">
+                                <div key={sec.key} className="bg-black/50 border border-white/10 rounded-2xl overflow-hidden shadow-lg flex flex-col group">
+                                    <div className="relative aspect-video overflow-hidden border-b border-white/5">
                                         {/* eslint-disable-next-line @next/next/no-img-element */}
                                         <img src={sec.current} alt={sec.label} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                                         <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent" />
-                                        <span className="absolute bottom-3 left-3 text-[10px] font-bold uppercase tracking-widest text-white bg-black/60 backdrop-blur-md border border-white/10 px-2.5 py-1 rounded-lg">
-                                            {sec.label}
+                                        <span className="absolute bottom-3 left-3 flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-white bg-black/60 backdrop-blur-md border border-white/10 px-2.5 py-1 rounded-lg">
+                                            {sec.badge} {sec.label}
                                         </span>
                                     </div>
-                                    <div className="p-4 space-y-3">
-                                        <p className="text-[11px] text-neutral-400 leading-relaxed">{sec.desc}</p>
-                                        {editBg?.key === sec.key ? (
-                                            <div className="space-y-2">
-                                                <input
-                                                    type="text"
-                                                    value={editBg.val}
-                                                    onChange={e => setEditBg({ key: sec.key, val: e.target.value })}
-                                                    placeholder="/images/mi-fondo.png o https://..."
-                                                    className={inputCls + " text-xs"}
-                                                    autoFocus
-                                                />
-                                                <div className="flex gap-2">
-                                                    <button onClick={handleSaveBg} className="flex-1 py-2 bg-brand-red text-white text-[11px] font-bold uppercase tracking-widest rounded-xl hover:bg-brand-red/80 transition-colors">
-                                                        Guardar
-                                                    </button>
-                                                    <button onClick={() => setEditBg(null)} className="px-3 py-2 border border-white/10 text-white/50 text-[11px] rounded-xl hover:bg-white/5 transition-colors">
-                                                        ✕
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        ) : (
-                                            <div className="flex gap-2">
-                                                <button
-                                                    onClick={() => setEditBg({ key: sec.key, val: sec.current })}
-                                                    className="flex-1 flex items-center justify-center gap-2 py-2 bg-white/5 hover:bg-white/10 border border-white/10 text-white text-[11px] font-bold uppercase tracking-widest rounded-xl transition-colors"
-                                                >
-                                                    <Edit size={13} /> Cambiar URL
-                                                </button>
-                                                <button
-                                                    onClick={() => resetBg(sec.key)}
-                                                    className="px-3 py-2 bg-white/5 hover:bg-white/10 border border-white/10 text-white/40 hover:text-white rounded-xl transition-colors"
-                                                >
-                                                    <RefreshCw size={14} />
-                                                </button>
-                                            </div>
-                                        )}
+                                    <div className="p-4 flex-1 flex flex-col justify-between">
+                                        <p className="text-[11px] text-neutral-400 leading-relaxed mb-4">{sec.desc}</p>
+                                        <div className="space-y-3">
+                                            <ImageUploader 
+                                                value="" 
+                                                onUploadSuccess={(url) => handleSetBgUrl(sec.key, url)} 
+                                                placeholder="Subir nueva imagen"
+                                            />
+                                            <button
+                                                onClick={() => resetBg(sec.key)}
+                                                className="w-full py-2 bg-white/5 hover:bg-neutral-800 border border-white/10 hover:border-white/20 text-[10px] font-bold tracking-widest text-white/50 hover:text-white rounded-xl transition-all uppercase"
+                                            >
+                                                Restaurar Default
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
                             ))}
